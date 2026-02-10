@@ -1,5 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
-import { FiUser, FiSearch, FiHeart, FiShoppingCart } from "react-icons/fi";
+import { FiUser, FiSearch, FiShoppingCart } from "react-icons/fi";
 import logo from "../../images/logo.png";
 
 const Header = () => {
@@ -9,11 +9,11 @@ const Header = () => {
 
         {/* LOGO */}
         <Link to="/" className="flex items-center">
-        <img
+          <img
             src={logo}
             alt="Logo"
             className="h-16 w-auto object-contain"
-        />
+          />
         </Link>
 
         {/* NAV LINKS */}
@@ -43,21 +43,29 @@ const Header = () => {
         </nav>
 
         {/* ICONS */}
-        <div className="flex items-center gap-5 text-xl text-[#2E2E2E]">
-          <button className="hover:text-[#B8964E] transition cursor-pointer">
+        <div className="flex items-center gap-6 text-[#2E2E2E]">
+
+          <button className="text-xl hover:text-[#B8964E] transition">
             <FiSearch />
-          </button>
-          <button className="hover:text-[#B8964E] transition cursor-pointer">
-            <FiUser />
           </button>
 
           <Link
-            to="/cart"
-            className="flex items-center gap-1 hover:text-[#B8964E] transition"
+            to="/my-account"
+            className="text-xl hover:text-[#B8964E] transition"
           >
-            <FiShoppingCart />
-            <span className="text-sm font-medium">₹0.00</span>
+            <FiUser />
           </Link>
+
+          {/* CART */}
+          <Link
+            to="/view-cart"
+            className="flex flex-col items-center text-sm hover:text-[#B8964E] transition"
+          >
+            <FiShoppingCart className="text-xl" />
+            <span className="font-medium">₹0.00</span>
+            {/* <span className="text-xs underline">View Cart</span> */}
+          </Link>
+
         </div>
       </div>
     </header>
