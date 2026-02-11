@@ -19,6 +19,8 @@ import EditBillingAddress from "./pages/my-account/EditBillingAddress";
 import EditShippingAddress from "./pages/my-account/EditShippingAddress";
 import AccountDetails from "./pages/my-account/AccountDetails";
 
+
+
 function App() {
   return (
     <BrowserRouter>
@@ -48,7 +50,6 @@ function App() {
 
   <Route path="account-details" element={<AccountDetails />} />
 </Route>
-
 
 
 
