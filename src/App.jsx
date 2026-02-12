@@ -18,6 +18,7 @@ import Addresses from "./pages/my-account/Addresses";
 import EditBillingAddress from "./pages/my-account/EditBillingAddress";
 import EditShippingAddress from "./pages/my-account/EditShippingAddress";
 import AccountDetails from "./pages/my-account/AccountDetails";
+import ShopPage from "./pages/ShopPage";
 
 
 
@@ -30,6 +31,7 @@ function App() {
         
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<ShopPage />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
