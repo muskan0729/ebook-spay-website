@@ -28,57 +28,10 @@ const AccountDetails = () => {
 
   return (
     <section>
-      <h1 className="text-4xl font-serif mb-8">Account details</h1>
+      <h1 className="text-4xl font-serif mb-8">Change Password </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
-        {/* First & Last Name */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block mb-2 font-medium">
-              First name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              className="w-full border border-[#F4B7B7] px-4 py-3 focus:outline-none"
-              required
-            />
-          </div>
 
-          <div>
-            <label className="block mb-2 font-medium">
-              Last name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              className="w-full border border-[#F4B7B7] px-4 py-3 focus:outline-none"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Display Name */}
-        <div>
-          <label className="block mb-2 font-medium">
-            Display name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="displayName"
-            value={formData.displayName}
-            onChange={handleChange}
-            className="w-full border border-[#F4B7B7] px-4 py-3 focus:outline-none"
-            required
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            This will be how your name will be displayed in the account section.
-          </p>
-        </div>
 
         {/* Email */}
         <div>
@@ -98,7 +51,7 @@ const AccountDetails = () => {
         {/* Password Change */}
         <fieldset className="border border-[#F4B7B7] p-6 space-y-4">
           <legend className="font-medium px-2">
-            Password change (optional)
+            Password change
           </legend>
 
           <input
