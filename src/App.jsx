@@ -1,7 +1,12 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { useState } from "react";
+
 import Header from "./components/common/Header";
-import Home from "./pages/Home";
 import Footer from "./components/common/Footer";
+import AuthSidebar from "./auth/AuthSidebar";
+
+/* PUBLIC PAGES */
+import Home from "./pages/Home";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -10,26 +15,48 @@ import RefundCancellation from "./pages/RefundCancellation";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import Terms from "./pages/Terms";
 import ViewCart from "./pages/ViewCart";
+
+/* MY ACCOUNT */
 import MyAccountLayout from "./pages/my-account/MyAccountLayout";
 import Dashboard from "./pages/my-account/Dashboard";
 import Orders from "./pages/my-account/Orders";
 import Downloads from "./pages/my-account/Downloads";
-import Addresses from "./pages/my-account/Addresses";
-import EditBillingAddress from "./pages/my-account/EditBillingAddress";
-import EditShippingAddress from "./pages/my-account/EditShippingAddress";
 import AccountDetails from "./pages/my-account/AccountDetails";
 import ShopPage from "./pages/ShopPage";
 
 
 
-function App() {
+
+/* INNER APP (needed for useNavigate) */
+function AppContent() {
+  const navigate = useNavigate();
+
+  // 🔐 Auth Sidebar State
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authView, setAuthView] = useState("login");
+
+  const openLogin = () => {
+    setAuthView("login");
+    setAuthOpen(true);
+  };
+
   return (
-    <BrowserRouter>
-      <Header />
-      {/* Page Content */}
+    <>
+      {/* HEADER */}
+      <Header openLogin={openLogin} />
+
+      {/* AUTH SIDEBAR */}
+      <AuthSidebar
+        open={authOpen}
+        setOpen={setAuthOpen}
+        view={authView}
+        setView={setAuthView}
+      />
+
+      {/* PAGE CONTENT */}
       <main className="min-h-screen bg-[#FEFCF9]">
-        
         <Routes>
+          {/* PUBLIC ROUTES */}
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/about" element={<AboutUs />} />
@@ -40,27 +67,29 @@ function App() {
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/view-cart" element={<ViewCart />} />
-         <Route path="/my-account" element={<MyAccountLayout />}>
-  <Route index element={<Dashboard />} />
-  <Route path="orders" element={<Orders />} />
-  <Route path="downloads" element={<Downloads />} />
-  <Route path="addresses" element={<Addresses />} />
 
-  {/* FIXED */}
-  <Route path="addresses/edit-address/billing" element={<EditBillingAddress />} />
-  <Route path="addresses/edit-address/shipping" element={<EditShippingAddress />} />
-
-  <Route path="account-details" element={<AccountDetails />} />
-</Route>
-
-
-
-
+          {/* MY ACCOUNT ROUTES */}
+          <Route path="/my-account" element={<MyAccountLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="downloads" element={<Downloads />} />
+            <Route path="account-details" element={<AccountDetails />} />
+          </Route>
         </Routes>
       </main>
+
+      {/* FOOTER */}
       <Footer />
+    </>
+  );
+}
+
+/* MAIN WRAPPER */
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
-    
   );
 }
 

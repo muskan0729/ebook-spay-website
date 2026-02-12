@@ -1,10 +1,5 @@
 import { Link } from "react-router-dom";
-
-
-
-const activeLink = "footer-link active";
-const normalLink = "footer-link";
-
+import logo from "../../images/logo.png"; // ✅ corrected path
 
 export default function Footer() {
   return (
@@ -29,16 +24,9 @@ export default function Footer() {
             <div>
               <h4 className="font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li>
-  <Link to="/privacy-policy" className="hover:underline">
-    Privacy Policy
-  </Link>
-</li>
-
+                <li><Link to="/privacy-policy" className="hover:underline">Privacy Policy</Link></li>
                 <li><Link to="/refund-Cancellation" className="hover:underline">Refund and Cancellation</Link></li>
-               <li>
-  <Link to="/refund-policy">Refund Policy</Link>
-</li>
+                <li><Link to="/refund-policy" className="hover:underline">Refund Policy</Link></li>
                 <li><Link to="/shipping-policy" className="hover:underline">Shipping Policy</Link></li>
                 <li><Link to="/terms" className="hover:underline">Terms & Condition</Link></li>
               </ul>
@@ -58,12 +46,12 @@ export default function Footer() {
             {/* ADDRESS */}
             <div className="text-right md:text-left">
               <img
-                src="/logo-footer.png"
+                src={logo}   // ✅ using imported image
                 alt="Ebookspay"
                 className="w-28 ml-auto md:ml-0 mb-4"
               />
+              &nbsp;&nbsp;&nbsp;&nbsp;<b>Spay Fintech</b>
               <p className="leading-relaxed">
-                Spay Fintech <br/>
                 316 Laxmi Plaza, Laxmi Industrial State, Andheri West,
                 Mumbai, Maharashtra, 400053.
               </p>

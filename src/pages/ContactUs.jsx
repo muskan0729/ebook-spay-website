@@ -1,12 +1,20 @@
+import contactHero from "../images/contact-hero.jpg";
+
 export default function ContactUs() {
   return (
-    <div className="contact-page">
+    <div>
+
       {/* HERO */}
-      <section className="contact-hero">
-        <div className="contact-hero-overlay">
-          <h1>Contact Us</h1>
-        </div>
+      <section
+        className="relative h-[400px] bg-cover bg-center flex items-center justify-center"
+        style={{ backgroundImage: `url(${contactHero})` }}
+      >
+        <div className="absolute inset-0 bg-black/50"></div>
+        <h1 className="relative text-white text-4xl md:text-5xl font-semibold">
+          Contact Us
+        </h1>
       </section>
+
 
       {/* INTRO */}
       <section className="contact-intro">
