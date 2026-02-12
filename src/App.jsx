@@ -22,6 +22,7 @@ import Dashboard from "./pages/my-account/Dashboard";
 import Orders from "./pages/my-account/Orders";
 import Downloads from "./pages/my-account/Downloads";
 import AccountDetails from "./pages/my-account/AccountDetails";
+import ShopPage from "./pages/ShopPage";
 
 
 
@@ -57,6 +58,7 @@ function AppContent() {
         <Routes>
           {/* PUBLIC ROUTES */}
           <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<ShopPage />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
