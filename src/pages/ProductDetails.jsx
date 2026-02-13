@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useGet } from "../hooks/useGet";
 import { useCart } from "../context/CartContext";
+import { usePost } from "../hooks/usePost";
 
 import visa from "../assets/images/details/visa.png";
 import mastercard from "../assets/images/details/mastercard.jpg";
@@ -11,12 +12,24 @@ export default function ProductDetails() {
   const { id } = useParams();
   const { addToCart } = useCart();
 
-  const { data, loading, error } = useGet(`products/${id}`);
-  const product = data?.data;
+  // ✅ GET product details
+  const {
+    data,
+    loading: productLoading,
+    error: productError,
+  } = useGet(`products/${id}`);
 
+  // ✅ POST cart/add API
+  const {
+    execute: addToCartApi,
+    loading: cartLoading,
+    error: cartError,
+  } = usePost("cart/add");
+
+  const product = data?.data;
   const IMG_URL = import.meta.env.VITE_IMG_URL;
 
-  if (loading) {
+  if (productLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-gray-500">
         Loading product…
@@ -24,7 +37,7 @@ export default function ProductDetails() {
     );
   }
 
-  if (error || !product) {
+  if (productError || !product) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-red-500">
         Product not found
@@ -32,7 +45,7 @@ export default function ProductDetails() {
     );
   }
 
-  // 🔥 Destructure product safely
+  // Safe destructuring
   const {
     title,
     image: rawImage,
@@ -41,12 +54,43 @@ export default function ProductDetails() {
     categories = [],
   } = product;
 
-  // ✅ Normalize image (same pattern as cards)
+  // Normalize image
   const imageName = rawImage?.split("/").pop();
   const image = imageName ? `${IMG_URL}${imageName}` : "/placeholder.png";
 
   const formattedPrice = Number(price || 0).toLocaleString();
   const oldPrice = (Number(price || 0) * 1.4).toLocaleString();
+
+  // ✅ HANDLE ADD TO CART
+  const handleAddToCart = async () => {
+    const payload = {
+      product_id: product.id,
+      quantity: 1,
+    };
+
+    try {
+      const response = await addToCartApi(payload);
+      console.log("API Response:", response);
+
+      // 🔥 SUCCESS CONDITION FIXED
+      if (response?.id && response?.status === "ACTIVE") {
+        // Update local cart context
+        addToCart({
+          id: product.id,
+          title,
+          price: Number(price || 0),
+          image,
+        });
+
+        alert("Product added to cart successfully!");
+      } else {
+        alert("Failed to add product to cart.");
+      }
+    } catch (err) {
+      console.error("Add to cart error:", err);
+      alert("Something went wrong while adding to cart.");
+    }
+  };
 
   return (
     <section className="max-w-7xl mx-auto px-6 py-20">
@@ -99,7 +143,6 @@ export default function ProductDetails() {
             <span className="text-xs text-gray-500">Free Shipping</span>
           </div>
 
-          {/* DIVIDER */}
           <div className="h-px bg-gray-200 my-8" />
 
           {/* DESCRIPTION */}
@@ -110,14 +153,8 @@ export default function ProductDetails() {
           {/* ADD TO CART */}
           <div className="mt-10">
             <button
-              onClick={() =>
-                addToCart({
-                  id: product.id,
-                  title,
-                  price: Number(price || 0),
-                  image, // ✅ full backend URL
-                })
-              }
+              onClick={handleAddToCart}
+              disabled={cartLoading}
               className="
                 w-full md:w-auto
                 px-14 py-4
@@ -129,10 +166,17 @@ export default function ProductDetails() {
                 hover:bg-black
                 transition
                 cursor-pointer
+                disabled:opacity-50
               "
             >
-              ADD TO CART
+              {cartLoading ? "Adding..." : "ADD TO CART"}
             </button>
+
+            {cartError && (
+              <p className="text-red-500 text-sm mt-3">
+                Failed to add to cart.
+              </p>
+            )}
           </div>
 
           {/* SAFE CHECKOUT */}
