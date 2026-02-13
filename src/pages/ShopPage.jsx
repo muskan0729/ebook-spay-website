@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import ProductCard from "../components/ProductCard";
 import { useGet } from "../hooks/useGet";
 import bannerImage from "../assets/images/banner.jpg";
+import BookCard from "../components/books/BookCard";
 
 const ShopPage = () => {
   // Pagination
@@ -97,8 +98,9 @@ const ShopPage = () => {
         {/* Products Grid - Optimized for larger cards */}
         {sortedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
-            {sortedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {sortedProducts.map((book) => (
+              // <ProductCard key={product.id} product={product} />
+                 <BookCard key={book.id} book={book} />
             ))}
           </div>
         ) : (

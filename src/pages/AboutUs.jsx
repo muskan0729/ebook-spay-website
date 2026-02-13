@@ -19,7 +19,7 @@ export default function AboutUs() {
       {/* STORY */}
       <section className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-12">
         <div>
-          <h2 className="text-3xl md:text-4xl italic font-light leading-snug">
+          <h2 className="text-3xl md:text-4xl font-light leading-snug">
             From Passion To Pages:<br />
             The Birth Of EbookSpay
           </h2>
@@ -46,7 +46,7 @@ export default function AboutUs() {
         <h6 className="text-sm font-semibold tracking-widest mb-4">
           QUALITY CURATION
         </h6>
-        <h2 className="text-3xl md:text-4xl italic font-light mb-6">
+        <h2 className="text-3xl md:text-4xl font-light mb-6">
           We Believe Books Are More Than Pages<br />
           They're Experiences Worth Cherishing
         </h2>
@@ -83,7 +83,7 @@ export default function AboutUs() {
         <h6 className="text-sm font-semibold tracking-widest mb-4">
           SUSTAINABLE READING
         </h6>
-        <h2 className="text-3xl md:text-4xl italic font-light mb-6">
+        <h2 className="text-3xl md:text-4xl font-light mb-6">
           Conscious Choices For A Better Tomorrow
         </h2>
         <p className="max-w-3xl mx-auto text-gray-600">
