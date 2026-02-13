@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
 import { useGet } from "../hooks/useGet";
 import { useEffect, useState } from "react";
 import { useDelete } from "../hooks/useDelete";
@@ -7,8 +6,9 @@ import { toast } from "sonner";
 
 export default function ViewCart() {
   const IMG_URL = import.meta.env.VITE_IMG_URL;
-  const { cart, removeItem, subtotal } = useCart();
-  
+
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+
 
   const {data,loading,refetch } = useGet("cart");
  const [cartData, setcartData] = useState([]);
@@ -18,17 +18,20 @@ export default function ViewCart() {
       setcartData(data?.items);
     }
   }, [data]);
-  console.log("vartggggdas",cartData);
+  // console.log("vartggggdas",cartData);
 const subtotal_p = Number(data?.subtotal || 0);
 const { executeDelete } = useDelete();
   // ✅ remove cart item function
 const handleRemoveItem = async (id) => {
   try {
+     setDeleteLoadingId(id);
     await executeDelete(`cart/item/${id}`);
     toast.success("Item removed");
     refetch();
   } catch (error) {
     toast.error("Failed to remove item");
+  }finally {
+    setDeleteLoadingId(null);
   }
 };
 
@@ -36,6 +39,19 @@ const handleRemoveItem = async (id) => {
   return (
     <section className="max-w-7xl mx-auto px-6 py-16">
       <h1 className="text-3xl font-serif mb-10">Cart</h1>
+{/* EMPTY CART */}
+{cartData.length === 0 && !loading && (
+  <div className="text-center py-20">
+    <p className="text-lg mb-6">Your cart is empty</p>
+
+    <Link
+      to="/"
+      className="inline-block bg-[#FF2C55] text-white px-8 py-3 rounded-full font-semibold"
+    >
+      CONTINUE SHOPPING
+    </Link>
+  </div>
+)}
 
 {cartData.length > 0 && (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -59,12 +75,18 @@ const handleRemoveItem = async (id) => {
           <tr key={item.id} className="border-b border-[#F3B3A6]">
   <td className="p-4">
     <div className="flex items-center gap-4 max-w-[350px]">
-      <button
-        onClick={() => handleRemoveItem(item.id)}
-        className="w-6 h-6 border rounded-full text-sm flex-shrink-0"
-      >
-        ×
-      </button>
+<button
+  onClick={() => handleRemoveItem(item.id)}
+  disabled={deleteLoadingId === item.id}
+  className="w-6 h-6 border rounded-full text-sm flex-shrink-0 flex items-center justify-center"
+>
+  {deleteLoadingId === item.id ? (
+    <span className="w-4 h-4 border-2 border-gray-400 border-t-red-500 rounded-full animate-spin"></span>
+  ) : (
+    "×"
+  )}
+</button>
+
 
       <img
         src={`${IMG_URL}${imageName}`}
