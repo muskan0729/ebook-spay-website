@@ -22,6 +22,27 @@ export const addToCartManager = async (product, execute) => {
   }
 };
 
+export const removeFromCartManager = async (productId, executeRemove) => {
+  const token = localStorage.getItem("token");
+
+  try {
+    if (token) {
+      // Call API to remove item
+      if (executeRemove) await executeRemove(productId);
+      toast.success("Removed from cart");
+    } else {
+      // IndexedDB for guest
+      await removeFromCartDB(productId);
+      toast.success("Removed from cart (Saved in browser)");
+      console.log("Removed product ID:", productId);
+    }
+  } catch (err) {
+    toast.error("Failed to remove cart item");
+    console.log(err);
+  }
+};
+
+
 export const addToWishlistManager = async (product, execute) => {
   const token = localStorage.getItem("token");
 
@@ -40,3 +61,5 @@ export const addToWishlistManager = async (product, execute) => {
     console.log(err);
   }
 };
+
+

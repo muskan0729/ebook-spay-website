@@ -1,132 +1,147 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useGet } from "../hooks/useGet";
+import { useEffect, useState } from "react";
+import { useDelete } from "../hooks/useDelete";
+import { toast } from "sonner";
 
 export default function ViewCart() {
+  const IMG_URL = import.meta.env.VITE_IMG_URL;
   const { cart, removeItem, subtotal } = useCart();
+  
+
+  const {data,loading,refetch } = useGet("cart");
+ const [cartData, setcartData] = useState([]);
+
+  useEffect(() => {
+    if(data?.items){
+      setcartData(data?.items);
+    }
+  }, [data]);
+  console.log("vartggggdas",cartData);
+const subtotal_p = Number(data?.subtotal || 0);
+const { executeDelete } = useDelete();
+  // ✅ remove cart item function
+const handleRemoveItem = async (id) => {
+  try {
+    await executeDelete(`cart/item/${id}`);
+    toast.success("Item removed");
+    refetch();
+  } catch (error) {
+    toast.error("Failed to remove item");
+  }
+};
+
 
   return (
     <section className="max-w-7xl mx-auto px-6 py-16">
       <h1 className="text-3xl font-serif mb-10">Cart</h1>
 
-      {/* EMPTY CART */}
-      {cart.length === 0 && (
-        <div className="text-center py-20">
-          <p className="text-lg mb-6">Your cart is empty</p>
-          <Link
-            to="/"
-            className="inline-block bg-[#FF2C55] text-white px-8 py-3 rounded-full"
-          >
-            CONTINUE SHOPPING
-          </Link>
-        </div>
-      )}
+{cartData.length > 0 && (
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-      {/* CART TABLE */}
-      {cart.length > 0 && (
-        <>
-          <div className="border border-[#F3B3A6]">
-            <table className="w-full text-left">
-              <thead className="border-b border-[#F3B3A6]">
-                <tr className="text-sm font-semibold">
-                  <th className="p-4">Product</th>
-                  <th>Price</th>
-                  <th>Subtotal</th>
-                </tr>
-              </thead>
+    {/* LEFT SIDE (PRODUCT DETAILS) */}
+    <div className="lg:col-span-2 border border-[#F3B3A6]">
+      <table className="w-full text-left">
+        <thead className="border-b border-[#F3B3A6]">
+          <tr className="text-sm font-semibold">
+            <th className="p-4">Product</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
 
-              <tbody>
-                {cart.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-[#F3B3A6]"
-                  >
-                    <td className="flex items-center gap-4 p-4">
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="w-6 h-6 border rounded-full text-sm"
-                      >
-                        ×
-                      </button>
+        <tbody>
+          {cartData.map((item) => {
+            const imageName = item.ebook.image?.split("/").pop();
 
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-16 h-20 object-cover"
-                      />
+            return (
+          <tr key={item.id} className="border-b border-[#F3B3A6]">
+  <td className="p-4">
+    <div className="flex items-center gap-4 max-w-[350px]">
+      <button
+        onClick={() => handleRemoveItem(item.id)}
+        className="w-6 h-6 border rounded-full text-sm flex-shrink-0"
+      >
+        ×
+      </button>
 
-                      <span className="text-red-500">
-                        {item.title}
-                      </span>
-                    </td>
+      <img
+        src={`${IMG_URL}${imageName}`}
+        alt={item.ebook.title}
+        className="w-16 h-20 object-cover flex-shrink-0"
+      />
 
-                    <td className="text-red-500">
-                      ₹{item.price.toLocaleString()}
-                    </td>
+      <span className="text-red-500  px-2 py-1 truncate">
+        {item.ebook.title}
+      </span>
+    </div>
+  </td>
 
-                    <td className="text-red-500">
-                      ₹{item.price.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+  <td className="text-red-500 whitespace-nowrap">
+    ₹{Number(item.price).toLocaleString()}
+  </td>
 
-            {/* COUPON ROW (OPTIONAL UI) */}
-            <div className="flex flex-wrap justify-between items-center p-4 gap-4">
+  <td className="text-red-500 whitespace-nowrap">
+    ₹{(Number(item.price) * Number(item.quantity)).toLocaleString()}
+  </td>
+</tr>
 
-            </div>
-          </div>
+            );
+          })}
+        </tbody>
+      </table>
 
-          {/* TOTALS */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 mt-16">
-            <div />
+    </div>
 
-            <div className="border border-[#F3B3A6] p-10">
-              <h2 className="text-3xl font-serif mb-8">
-                Cart Totals
-              </h2>
+    {/* RIGHT SIDE (TOTAL CARD) */}
+    <div className="border border-[#F3B3A6] p-10 h-fit">
+      <h2 className="text-3xl font-serif mb-8">
+        Cart Totals
+      </h2>
 
-              <div className="flex justify-between py-4 border-b">
-                <span>Subtotal</span>
-                <span className="text-red-500">
-                  ₹{subtotal.toLocaleString()}
-                </span>
-              </div>
+      <div className="flex justify-between py-4 border-b">
+        <span>Subtotal</span>
+        <span className="text-red-500">
+          ₹{subtotal_p.toLocaleString()}
+        </span>
+      </div>
 
-              <div className="py-5 border-b text-sm">
-                <p className="font-medium mb-1">Shipping</p>
-                <p>Free shipping</p>
-                <p className="font-semibold mt-2">
-                  Shipping to 30 West Rocky Oak Lane, Velit
-                  nostrud labor, Saepe non sunt libe
-                  400058, Maharashtra.
-                </p>
+      <div className="py-5 border-b text-sm">
+        <p className="font-medium mb-1">Shipping</p>
+        <p>Free shipping</p>
 
-                <Link
-                  to="/my-account/addresses"
-                  className="text-red-500 mt-2 inline-block"
-                >
-                  Change address
-                </Link>
-              </div>
+        <p className="font-semibold mt-2">
+          Shipping to 30 West Rocky Oak Lane, Velit
+          nostrud labor, Saepe non sunt libe
+          400058, Maharashtra.
+        </p>
 
-              <div className="flex justify-between py-5">
-                <span>Total</span>
-                <span className="text-red-500 text-lg">
-                  ₹{subtotal.toLocaleString()}
-                </span>
-              </div>
+        <Link
+          to="/my-account/addresses"
+          className="text-red-500 mt-2 inline-block"
+        >
+          Change address
+        </Link>
+      </div>
 
-              <Link
-                to="/checkout"
-                className="block text-center bg-[#FF2C55] text-white py-4 rounded-full font-semibold mt-4"
-              >
-                PROCEED TO CHECKOUT
-              </Link>
-            </div>
-          </div>
-        </>
-      )}
+      <div className="flex justify-between py-5">
+        <span>Total</span>
+        <span className="text-red-500 text-lg">
+          ₹{subtotal_p.toLocaleString()}
+        </span>
+      </div>
+
+      <Link
+        to="/checkout"
+        className="block text-center bg-[#FF2C55] text-white py-4 rounded-full font-semibold mt-4"
+      >
+        PROCEED TO CHECKOUT
+      </Link>
+    </div>
+  </div>
+)}
+
     </section>
   );
 }
