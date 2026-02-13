@@ -1,8 +1,6 @@
 @import "tailwindcss";
 
 
-
-
 footer h4 {
   letter-spacing: 0.4px;
 }
@@ -130,6 +128,7 @@ footer a {
 
 /* HERO */
 .contact-hero {
+
   height: 60vh;
   background: url("../src/assets/images/contact-hero.jpg") center/cover no-repeat;
   position: relative;

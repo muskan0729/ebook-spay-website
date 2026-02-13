@@ -5,13 +5,16 @@ import { FiUser, FiSearch, FiShoppingCart } from "react-icons/fi";
 import logo from "../../assets/images/logoo.png";
 import AuthSidebar from "../../auth/AuthSidebar";
 import SearchOverlay from "../../components/common/SearchOverlay";
+import CartDrawer from "../cart/CartDrawer";
 
 const Header = ({ openLogin }) => {
   const navigate = useNavigate();
 
   const [authOpen, setAuthOpen] = useState(false);
   const [view, setView] = useState("login");
-const [searchOpen, setSearchOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+
   const token = localStorage.getItem("token");
 
   const handleUserClick = () => {
@@ -28,7 +31,7 @@ const [searchOpen, setSearchOpen] = useState(false);
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
 
-          {/* LOGO + TEXT */}
+          {/* LOGO */}
           <Link to="/" className="flex flex-col items-start">
             <img
               src={logo}
@@ -37,7 +40,7 @@ const [searchOpen, setSearchOpen] = useState(false);
             />
           </Link>
 
-          {/* NAV LINKS */}
+          {/* NAV */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium tracking-wide text-[#2E2E2E]">
             {["/", "/shop", "/about", "/contact"].map((path, i) => {
               const labels = ["HOME", "SHOP", "ABOUT US", "CONTACT US"];
@@ -67,49 +70,56 @@ const [searchOpen, setSearchOpen] = useState(false);
           <div className="flex items-center gap-6 text-[#2E2E2E]">
 
             {/* SEARCH */}
-           <button
-  onClick={() => setSearchOpen(true)}
-  className="text-xl hover:text-[#B8964E] transition"
->
-  <FiSearch />
-</button>
-
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="text-xl hover:text-[#B8964E] transition"
+            >
+              <FiSearch />
+            </button>
 
             {/* USER */}
             <button
-              onClick={openLogin}
+              onClick={handleUserClick}
               className="text-xl hover:text-[#B8964E] transition cursor-pointer"
-              aria-label="User"
             >
               <FiUser />
             </button>
 
             {/* CART */}
-            <Link
-              to="/view-cart"
+            <button
+              onClick={() => setCartOpen(true)}
               className="flex flex-col items-center text-sm hover:text-[#B8964E] transition"
             >
               <FiShoppingCart className="text-xl" />
               {/* <span className="font-medium">₹0.00</span> */}
-            </Link>
+            {/* </Link> */}
+            </button> 
+            
 
           </div>
         </div>
       </header>
 
-      {/* AUTH SIDEBAR */}
+      {/* AUTH */}
       <AuthSidebar
         open={authOpen}
         setOpen={setAuthOpen}
         view={view}
         setView={setView}
       />
- <SearchOverlay
-  open={searchOpen}
-  onClose={() => setSearchOpen(false)}
-/>
 
+      {/* SEARCH */}
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
 
+      {/* CART DRAWER */}
+      <CartDrawer
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}   // ✅ FIXED
+        openLogin={openLogin}
+      />
     </>
   );
 };
