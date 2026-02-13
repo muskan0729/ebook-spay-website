@@ -1,62 +1,72 @@
 import { Link } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../context/CartContext";
 
-const BookCard = ({ book }) => {
+const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
-
   const IMG_URL = import.meta.env.VITE_IMG_URL;
 
-  // Safe fallback handling
-  const id = book?.id;
-  const title = book?.title || "Untitled";
+  if (!product) return null;
 
-  const imageName = book?.image?.split("/").pop();
-  const image = imageName
+  const {
+    id,
+    title = "Untitled",
+    image,
+    price,
+    oldPrice,
+    rating = 4,
+  } = product;
+
+  const imageName = image?.split("/").pop();
+  const productImage = imageName
     ? `${IMG_URL}${imageName}`
     : "/placeholder.png";
 
-  const price = Number(book?.price || 0);
-  const oldPrice = book?.oldPrice ? Number(book.oldPrice) : null;
-  const rating = book?.rating ?? 4;
+  const numericPrice = Number(price || 0);
+  const numericOldPrice =
+    oldPrice && Number(oldPrice) > numericPrice
+      ? Number(oldPrice)
+      : null;
 
   return (
     <div
       className="
         group
         bg-white
-        rounded-2xl
+        rounded-xl
         border border-[#E9E4DA]
-        shadow-[0_8px_20px_rgba(0,0,0,0.06)]
+        shadow-[0_6px_16px_rgba(0,0,0,0.06)]
         overflow-hidden
         transition-all
         duration-300
-        hover:-translate-y-2
-        hover:scale-[1.02]
-        hover:shadow-[0_18px_40px_rgba(184,150,78,0.25)]
+        hover:-translate-y-1.5
+        hover:scale-[1.015]
+        hover:shadow-[0_14px_30px_rgba(184,150,78,0.22)]
       "
     >
       {/* IMAGE */}
       <Link to={`/books/${id}`}>
-        <div className="h-72 bg-[#F5F3EF] flex items-center justify-center overflow-hidden">
+        <div className="h-56 bg-[#F5F3EF] flex items-center justify-center overflow-hidden">
           <img
-            src={image}
+            src={productImage}
             alt={title}
             className="h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => (e.currentTarget.src = "/placeholder.png")}
           />
         </div>
       </Link>
 
       {/* CONTENT */}
-      <div className="p-5 text-center space-y-2">
+      <div className="p-4 text-center space-y-1.5">
 
         {/* TITLE */}
         <Link
           to={`/books/${id}`}
           className="
             block
-            text-sm
+            text-[13px]
             font-medium
             text-[#2E2E2E]
+            leading-snug
             transition-colors
             group-hover:text-[#B8964E]
           "
@@ -65,23 +75,23 @@ const BookCard = ({ book }) => {
         </Link>
 
         {/* RATING */}
-        <div className="text-sm text-[#B8964E]">
+        <div className="text-xs text-[#B8964E]">
           {"★".repeat(Math.round(rating))}
-          <span className="text-gray-400 text-xs ml-1">
+          <span className="text-gray-400 text-[11px] ml-1">
             ({rating})
           </span>
         </div>
 
         {/* PRICE */}
-        <div className="flex justify-center items-center gap-2 pt-1">
-          {oldPrice && oldPrice > price && (
-            <span className="text-sm text-gray-400 line-through">
-              ₹{oldPrice.toLocaleString()}
+        <div className="flex justify-center items-center gap-2 pt-0.5">
+          {numericOldPrice && (
+            <span className="text-xs text-gray-400 line-through">
+              ₹{numericOldPrice.toLocaleString()}
             </span>
           )}
 
-          <span className="text-lg font-semibold text-[#2E2E2E]">
-            ₹{price.toLocaleString()}
+          <span className="text-base font-semibold text-[#2E2E2E]">
+            ₹{numericPrice.toLocaleString()}
           </span>
         </div>
 
@@ -89,19 +99,19 @@ const BookCard = ({ book }) => {
         <button
           onClick={() =>
             addToCart({
-              id: id,
-              title: title,
-              price: price,
-              image: image,
+              id,
+              title,
+              price: numericPrice,
+              image: productImage,
             })
           }
           className="
-            mt-4
+            mt-3
             w-full
             py-2
-            text-sm
+            text-xs
             tracking-wide
-            rounded-lg
+            rounded-md
             bg-[#F6C6C6]
             text-[#A30000]
             transition
@@ -112,10 +122,9 @@ const BookCard = ({ book }) => {
         >
           ADD TO CART
         </button>
-
       </div>
     </div>
   );
 };
 
-export default BookCard;
+export default ProductCard;

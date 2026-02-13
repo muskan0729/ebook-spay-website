@@ -130,7 +130,7 @@ footer a {
 .contact-hero {
 
   height: 60vh;
-  background: url("/images/contact-hero.jpg") center/cover no-repeat;
+  background: url("../src/assets/images/contact-hero.jpg") center/cover no-repeat;
   position: relative;
 }
 

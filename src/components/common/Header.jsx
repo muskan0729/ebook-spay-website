@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FiUser, FiSearch, FiShoppingCart } from "react-icons/fi";
-import logo from "../../images/logo.png";
+// import logo from "../src/assets/images/logoo.png";
+import logo from "../../assets/images/logoo.png";
 import AuthSidebar from "../../auth/AuthSidebar";
 import SearchOverlay from "../../components/common/SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
@@ -35,11 +36,8 @@ const Header = ({ openLogin }) => {
             <img
               src={logo}
               alt="Logo"
-              className="h-12 w-auto object-contain"
+              className="h-23 w-auto object-contain"
             />
-            <span className="text-sm font-medium text-gray-900 mt-1">
-              &nbsp;&nbsp;&nbsp; Spay Fintech
-            </span>
           </Link>
 
           {/* NAV */}
@@ -93,8 +91,8 @@ const Header = ({ openLogin }) => {
               className="flex flex-col items-center text-sm hover:text-[#B8964E] transition"
             >
               <FiShoppingCart className="text-xl" />
-              <span className="font-medium">₹0.00</span>
-            </button>
+              {/* <span className="font-medium">₹0.00</span> */}
+            </Link>
 
           </div>
         </div>

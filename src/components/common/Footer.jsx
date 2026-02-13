@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import logo from "../../images/logo.png"; // ✅ corrected path
+// import logo from "../src/assets/images/logoo.png"; // ✅ corrected path
+import logo from "../../assets/images/logoo.png";
 
 export default function Footer() {
   return (
@@ -46,11 +47,10 @@ export default function Footer() {
             {/* ADDRESS */}
             <div className="text-right md:text-left">
               <img
-                src={logo}   // ✅ using imported image
+                src={logo}
                 alt="Ebookspay"
                 className="w-28 ml-auto md:ml-0 mb-4"
               />
-              &nbsp;&nbsp;&nbsp;&nbsp;<b>Spay Fintech</b>
               <p className="leading-relaxed">
                 316 Laxmi Plaza, Laxmi Industrial State, Andheri West,
                 Mumbai, Maharashtra, 400053.
