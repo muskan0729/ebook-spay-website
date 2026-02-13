@@ -1,73 +1,120 @@
 import { NavLink, Outlet } from "react-router-dom";
-
-const linkClass =
-  "block px-6 py-4 border border-[#FFCDD2] text-[#FF1744] hover:bg-[#FFF1F2]";
-
-const activeClass =
-  "block px-6 py-4 border border-[#FF1744] bg-[#FFF1F2] font-semibold";
+import { FiUser, FiPackage, FiDownload, FiLock, FiLogOut } from "react-icons/fi";
 
 export default function MyAccountLayout() {
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
   const handleLogout = () => {
-    // Clear authentication
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("user_id");
     localStorage.removeItem("token_type");
 
-    // Full reload and redirect
     window.location.href = "/";
   };
 
+  const baseLink =
+    "flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition";
+
+  const activeLink =
+    "bg-black text-white";
+
+  const inactiveLink =
+    "text-gray-600 hover:bg-gray-100";
+
   return (
-    <section className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10">
-      
-      {/* SIDEBAR */}
-      <aside className="border border-[#FFCDD2]">
+    <section className="max-w-7xl mx-auto px-4 md:px-6 py-10">
 
-        <NavLink
-          to="/my-account"
-          end
-          className={({ isActive }) => (isActive ? activeClass : linkClass)}
-        >
-          Dashboard
-        </NavLink>
+      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8">
 
-        <NavLink
-          to="orders"
-          className={({ isActive }) => (isActive ? activeClass : linkClass)}
-        >
-          Orders
-        </NavLink>
+        {/* SIDEBAR */}
+        <aside className="bg-white border border-gray-200 rounded-xl shadow-sm">
 
-        <NavLink
-          to="downloads"
-          className={({ isActive }) => (isActive ? activeClass : linkClass)}
-        >
-          Downloads
-        </NavLink>
+          {/* User Info */}
+          <div className="p-5 border-b border-gray-100 flex items-center gap-3">
 
-        <NavLink
-          to="account-details"
-          className={({ isActive }) => (isActive ? activeClass : linkClass)}
-        >
-          Change Password
-        </NavLink>
+            <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center font-semibold">
+              {user?.name?.charAt(0)?.toUpperCase() || "U"}
+            </div>
 
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          className={`${linkClass} text-left w-full`}
-        >
-          Log out
-        </button>
+            <div>
+              <p className="text-sm font-semibold">
+                {user?.name || "User"}
+              </p>
+              <p className="text-xs text-gray-500">
+                {user?.email || ""}
+              </p>
+            </div>
 
-      </aside>
+          </div>
 
-      {/* PAGE CONTENT */}
-      <div>
-        <Outlet />
+          {/* Navigation */}
+          <nav className="p-3 space-y-1">
+
+            <NavLink
+              to="/my-account"
+              end
+              className={({ isActive }) =>
+                `${baseLink} ${isActive ? activeLink : inactiveLink}`
+              }
+            >
+              <FiUser size={16} />
+              Dashboard
+            </NavLink>
+
+            <NavLink
+              to="orders"
+              className={({ isActive }) =>
+                `${baseLink} ${isActive ? activeLink : inactiveLink}`
+              }
+            >
+              <FiPackage size={16} />
+              Orders
+            </NavLink>
+
+            <NavLink
+              to="downloads"
+              className={({ isActive }) =>
+                `${baseLink} ${isActive ? activeLink : inactiveLink}`
+              }
+            >
+              <FiDownload size={16} />
+              Downloads
+            </NavLink>
+
+            <NavLink
+              to="account-details"
+              className={({ isActive }) =>
+                `${baseLink} ${isActive ? activeLink : inactiveLink}`
+              }
+            >
+              <FiLock size={16} />
+              Change Password
+            </NavLink>
+
+          </nav>
+
+          {/* Logout */}
+          <div className="p-3 border-t border-gray-100">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-red-600 hover:bg-red-50 w-full transition"
+            >
+              <FiLogOut size={16} />
+              Log out
+            </button>
+          </div>
+
+        </aside>
+
+        {/* CONTENT */}
+        <main className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 min-h-[500px]">
+          <Outlet />
+        </main>
+
       </div>
+
     </section>
   );
 }

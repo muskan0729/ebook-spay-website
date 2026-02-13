@@ -3,14 +3,12 @@ import { usePost } from "../../hooks/usePost";
 
 const AccountDetails = () => {
   const [formData, setFormData] = useState({
-    firstName: "Admin",
-    lastName: "User",
-    displayName: "admin",
-    email: "admin@example.com",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+
+  const [success, setSuccess] = useState("");
 
   const { execute, loading, error } = usePost("change-password");
 
@@ -23,10 +21,10 @@ const AccountDetails = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccess("");
 
-    // Basic validation
-    if (!formData.newPassword || !formData.confirmPassword) {
-      alert("Please fill all password fields");
+    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+      alert("Please fill all fields");
       return;
     }
 
@@ -42,77 +40,93 @@ const AccountDetails = () => {
         new_password_confirmation: formData.confirmPassword,
       });
 
-      alert("Password changed successfully");
+      setSuccess("Password updated successfully.");
 
-      // Reset password fields only
       setFormData({
-        ...formData,
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       });
+
     } catch (err) {
       console.error(err);
     }
   };
 
   return (
-    <section>
-      <h1 className="text-4xl font-serif mb-8">Change Password</h1>
+    <div className="space-y-6 max-w-2xl">
 
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-semibold">Change Password</h2>
+        <p className="text-sm text-gray-500 mt-1">
+          Update your account password below.
+        </p>
+      </div>
 
-        {/* Email */}
-        {/* Password Change */}
-        <fieldset className="border border-[#F4B7B7] p-6 space-y-4">
-          <legend className="font-medium px-2">
-            Password change
-          </legend>
+      {/* Card */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
 
-          <input
-            type="password"
-            name="currentPassword"
-            placeholder="Current password"
-            value={formData.currentPassword}
-            onChange={handleChange}
-            className="w-full border border-[#F4B7B7] px-4 py-3 focus:outline-none"
-          />
+        <form onSubmit={handleSubmit} className="space-y-6">
 
-          <input
-            type="password"
-            name="newPassword"
-            placeholder="New password"
-            value={formData.newPassword}
-            onChange={handleChange}
-            className="w-full border border-[#F4B7B7] px-4 py-3 focus:outline-none"
-          />
+          <div className="space-y-4">
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm new password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className="w-full border border-[#F4B7B7] px-4 py-3 focus:outline-none"
-          />
-        </fieldset>
+            <input
+              type="password"
+              name="currentPassword"
+              placeholder="Current password"
+              value={formData.currentPassword}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-black focus:outline-none"
+            />
 
-        {error && (
-          <p className="text-red-500 text-sm">
-            {error.message || "Something went wrong"}
-          </p>
-        )}
+            <input
+              type="password"
+              name="newPassword"
+              placeholder="New password"
+              value={formData.newPassword}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-black focus:outline-none"
+            />
 
-        {/* Save Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-[#FF2D55] text-white px-10 py-3 rounded-full font-semibold hover:opacity-90 disabled:opacity-50"
-        >
-          {loading ? "Saving..." : "Save changes"}
-        </button>
-      </form>
-    </section>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm new password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-black focus:outline-none"
+            />
+
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p className="text-sm text-red-500">
+              {error.message || "Something went wrong"}
+            </p>
+          )}
+
+          {/* Success */}
+          {success && (
+            <p className="text-sm text-green-600">
+              {success}
+            </p>
+          )}
+
+          {/* Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white py-3 rounded-full font-medium hover:opacity-90 transition disabled:opacity-50"
+          >
+            {loading ? "Saving..." : "Save Changes"}
+          </button>
+
+        </form>
+      </div>
+
+    </div>
   );
 };
 

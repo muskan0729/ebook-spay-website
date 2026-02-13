@@ -32,71 +32,113 @@ export default function Orders() {
     );
   }
 
-  return (
-    <table className="w-full border border-[#FFCDD2] text-sm">
-      <thead className="bg-[#FFF1F2]">
-        <tr>
-          <th className="p-3 border">Order</th>
-          <th className="p-3 border">Date</th>
-          <th className="p-3 border">Status</th>
-          <th className="p-3 border">Total</th>
-          <th className="p-3 border">Actions</th>
-        </tr>
-      </thead>
+ return (
+  <div className="space-y-6">
 
-      <tbody>
-        {orders.length === 0 && (
-          <tr>
-            <td colSpan="5" className="text-center p-6 text-gray-500">
-              No orders found.
-            </td>
-          </tr>
-        )}
+    {/* Header */}
+    <div>
+      <h2 className="text-2xl font-semibold">My Orders</h2>
+      <p className="text-sm text-gray-500 mt-1">
+        View and track all your recent purchases.
+      </p>
+    </div>
 
-        {orders.map((order) => (
-          <tr key={order.id}>
-            {/* Order Number */}
-            <td className="p-3 border text-red-500">
-              #{order.order_no}
-            </td>
+    {/* Not Logged In */}
+    {!userId && (
+      <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-500">
+        Please login to view your orders.
+      </div>
+    )}
 
-            {/* Date */}
-            <td className="p-3 border">
-              {formatDate(order.created_at)}
-            </td>
+    {userId && (
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
 
-            {/* Status */}
-            <td className="p-3 border capitalize">
-              {order.status}
-            </td>
+        <table className="w-full text-sm">
 
-            {/* Total */}
-            <td className="p-3 border text-red-500">
-              ₹{order.bill_amount}
-            </td>
+          <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
+            <tr>
+              <th className="px-6 py-4 text-left">Order</th>
+              <th className="px-6 py-4 text-left">Date</th>
+              <th className="px-6 py-4 text-left">Status</th>
+              <th className="px-6 py-4 text-left">Total</th>
+              <th className="px-6 py-4 text-right">Action</th>
+            </tr>
+          </thead>
 
-            {/* Actions */}
-            <td className="p-3 border">
-              <Link
-                to={`/order-details/${order.id}`}
-                className="bg-[#FF1744] text-white px-6 py-2 rounded-full inline-block text-center"
-              >
-                VIEW
-              </Link>
-            </td>
-          </tr>
-        ))}
-      </tbody>
+          <tbody className="divide-y divide-gray-100">
 
-      {error && (
-        <tfoot>
-          <tr>
-            <td colSpan="5" className="text-center text-red-500 p-4">
-              {error.message || "Something went wrong"}
-            </td>
-          </tr>
-        </tfoot>
-      )}
-    </table>
-  );
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan="5" className="px-6 py-10 text-center text-gray-500">
+                  No orders found.
+                </td>
+              </tr>
+            )}
+
+            {orders.map((order) => {
+
+              const statusColor =
+                order.status === "completed"
+                  ? "bg-green-100 text-green-700"
+                  : order.status === "pending"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-gray-100 text-gray-600";
+
+              return (
+                <tr key={order.id} className="hover:bg-gray-50 transition">
+
+                  {/* Order Number */}
+                  <td className="px-6 py-4 font-medium text-black">
+                    #{order.order_no}
+                  </td>
+
+                  {/* Date */}
+                  <td className="px-6 py-4 text-gray-600">
+                    {formatDate(order.created_at)}
+                  </td>
+
+                  {/* Status Badge */}
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${statusColor}`}
+                    >
+                      {order.status}
+                    </span>
+                  </td>
+
+                  {/* Total */}
+                  <td className="px-6 py-4 font-semibold text-black">
+                    ₹{order.bill_amount}
+                  </td>
+
+                  {/* Action */}
+                  <td className="px-6 py-4 text-right">
+                    <Link
+                      to={`/order-details/${order.id}`}
+                      className="inline-flex items-center gap-1 text-sm font-medium text-black hover:underline"
+                    >
+                      View
+                    </Link>
+                  </td>
+
+                </tr>
+              );
+            })}
+
+          </tbody>
+
+        </table>
+
+      </div>
+    )}
+
+    {error && (
+      <div className="text-center text-red-500 text-sm">
+        {error.message || "Something went wrong"}
+      </div>
+    )}
+
+  </div>
+);
+
 }
