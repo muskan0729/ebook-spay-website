@@ -76,7 +76,7 @@ const Login = ({ switchToRegister, onSuccess }) => {
       onSuccess?.(res);
 
       // Redirect to My Account
-      navigate("/my-account");
+      navigate("/");
 
     } catch (err) {
       console.error("Login failed", err);
@@ -97,148 +97,124 @@ const Login = ({ switchToRegister, onSuccess }) => {
   };
 
   return (
-    <div className="min-h-[500px] flex items-center justify-center px-6">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+    <>
+  <div className="w-full max-w-md bg-white p-8 ">
 
-        {isLoggedIn ? (
-          /* ✅ LOGGED IN VIEW */
-          <div className="text-center space-y-6">
+    {/* Header */}
 
-            {/* Avatar */}
-            <div className="flex justify-center">
-              <div className="h-20 w-20 rounded-full bg-[#B8964E] text-white flex items-center justify-center text-2xl font-semibold shadow-md">
-                {user?.name?.charAt(0)?.toUpperCase() || "U"}
-              </div>
-            </div>
+    <form className="space-y-5" onSubmit={handleSubmit}>
 
-            {/* User Info */}
-            <div>
-              <h3 className="text-xl font-semibold">
-                {user?.name || "User"}
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
-                {user?.email}
-              </p>
-            </div>
-
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition"
-            >
-              Logout
-            </button>
-          </div>
-
-        ) : (
-          /* ❌ LOGIN FORM */
-          <>
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-semibold">Welcome Back</h2>
-              <p className="text-sm text-gray-500 mt-2">
-                Login to continue your reading journey
-              </p>
-            </div>
-
-            <form className="space-y-6" onSubmit={handleSubmit}>
-
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Email Address
-                </label>
-                <input
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  type="email"
-                  className="
-                    w-full
-                    border border-gray-300
-                    rounded-lg
-                    px-4 py-3
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-[#B8964E]
-                    transition
-                  "
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  className="
-                    w-full
-                    border border-gray-300
-                    rounded-lg
-                    px-4 py-3
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-[#B8964E]
-                    transition
-                  "
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
-
-              {/* Error */}
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
-                  {error.message || error}
-                </div>
-              )}
-
-              {/* Submit */}
-              <button
-                disabled={loading}
-                className="
-                  w-full
-                  bg-[#B8964E]
-                  text-white
-                  py-3
-                  rounded-lg
-                  font-medium
-                  hover:opacity-90
-                  transition
-                  disabled:opacity-60
-                "
-              >
-                {loading ? "Logging in..." : "Log in"}
-              </button>
-            </form>
-
-            <div className="my-6 flex items-center gap-3">
-              <div className="flex-1 h-px bg-gray-200"></div>
-              <span className="text-xs text-gray-400">OR</span>
-              <div className="flex-1 h-px bg-gray-200"></div>
-            </div>
-
-            {/* Register Switch */}
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={switchToRegister}
-                className="text-sm font-medium text-[#B8964E] hover:underline"
-              >
-                Create an Account
-              </button>
-            </div>
-          </>
-        )}
-
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-medium mb-2 text-gray-700">
+          Email Address
+        </label>
+        <input
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          type="email"
+          className="
+            w-full
+            border border-gray-300
+            rounded-xl
+            px-4 py-3
+            focus:outline-none
+            focus:ring-2
+            focus:ring-[#B8964E]
+            focus:border-transparent
+            transition
+          "
+          placeholder="you@example.com"
+          required
+        />
       </div>
+
+      {/* Password */}
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <label className="text-sm font-medium text-gray-700">
+            Password
+          </label>
+          {/* <button
+            type="button"
+            className="text-xs text-gray-400 hover:text-[#B8964E]"
+          >
+            Forgot?
+          </button> */}
+        </div>
+
+        <input
+          type="password"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+          className="
+            w-full
+            border border-gray-300
+            rounded-xl
+            px-4 py-3
+            focus:outline-none
+            focus:ring-2
+            focus:ring-[#B8964E]
+            focus:border-transparent
+            transition
+          "
+          placeholder="Enter your password"
+          required
+        />
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
+          {error.message || error}
+        </div>
+      )}
+
+      {/* Submit */}
+      <button
+        disabled={loading}
+        className="
+          w-full
+          bg-black
+          text-white
+          py-3
+          rounded-xl
+          font-medium
+          hover:bg-gray-900
+          transition
+          disabled:opacity-60
+        "
+      >
+        {loading ? "Signing in..." : "Sign In"}
+      </button>
+    </form>
+
+    {/* Divider */}
+    <div className="my-6 flex items-center gap-3">
+      <div className="flex-1 h-px bg-gray-200"></div>
+      <span className="text-xs text-gray-400">OR</span>
+      <div className="flex-1 h-px bg-gray-200"></div>
     </div>
+
+    {/* Register */}
+    <div className="text-center">
+      <p className="text-sm text-gray-500">
+        Don’t have an account?
+      </p>
+      <button
+        type="button"
+        onClick={switchToRegister}
+        className="mt-2 text-sm font-medium text-[#B8964E] hover:underline"
+      >
+        Create Account
+      </button>
+    </div>
+
+  </div>
+</>
+
   );
 };
 

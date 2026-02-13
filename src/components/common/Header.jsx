@@ -6,6 +6,8 @@ import logo from "../../assets/images/logoo.png";
 import AuthSidebar from "../../auth/AuthSidebar";
 import SearchOverlay from "../../components/common/SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
+import { useGet } from "../../hooks/useGet";
+
 
 const Header = ({ openLogin }) => {
   const navigate = useNavigate();
@@ -14,6 +16,11 @@ const Header = ({ openLogin }) => {
   const [view, setView] = useState("login");
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+
+  const {data: cartData} = useGet("cart",2000);
+
+const subtotal = cartData?.subtotal || 0;
+console.log(subtotal);
 
   const token = localStorage.getItem("token");
 
@@ -86,14 +93,19 @@ const Header = ({ openLogin }) => {
             </button>
 
             {/* CART */}
+            {/* CART (DRAWER OPEN) */}
             <button
-              onClick={() => setCartOpen(true)}
-              className="flex flex-col items-center text-sm hover:text-[#B8964E] transition"
-            >
-              <FiShoppingCart className="text-xl" />
-              {/* <span className="font-medium">₹0.00</span> */}
-            {/* </Link> */}
-            </button> 
+                onClick={() => setCartOpen(true)}
+                className="flex items-center gap-1 hover:text-[#B8964E] transition cursor-pointer"
+                aria-label="Cart"
+              >
+                <FiShoppingCart />
+
+                {/* SUBTOTAL */}
+                <span className="text-sm font-medium">
+                  ₹{subtotal}
+                </span>
+              </button> 
             
 
           </div>
