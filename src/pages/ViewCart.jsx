@@ -6,164 +6,153 @@ import { toast } from "sonner";
 
 export default function ViewCart() {
   const IMG_URL = import.meta.env.VITE_IMG_URL;
-
   const [deleteLoadingId, setDeleteLoadingId] = useState(null);
-
-
-  const {data,loading,refetch } = useGet("cart");
- const [cartData, setcartData] = useState([]);
+  const { data, loading, refetch } = useGet("cart");
+  const [cartData, setCartData] = useState([]);
+  const { executeDelete } = useDelete();
 
   useEffect(() => {
-    if(data?.items){
-      setcartData(data?.items);
-    }
+    if (data?.items) setCartData(data.items);
   }, [data]);
-  // console.log("vartggggdas",cartData);
-const subtotal_p = Number(data?.subtotal || 0);
-const { executeDelete } = useDelete();
-  // ✅ remove cart item function
-const handleRemoveItem = async (id) => {
-  try {
-     setDeleteLoadingId(id);
-    await executeDelete(`cart/item/${id}`);
-    toast.success("Item removed");
-    refetch();
-  } catch (error) {
-    toast.error("Failed to remove item");
-  }finally {
-    setDeleteLoadingId(null);
-  }
-};
 
+  const subtotal = Number(data?.subtotal || 0);
+
+  const handleRemoveItem = async (id) => {
+    try {
+      setDeleteLoadingId(id);
+      await executeDelete(`cart/item/${id}`);
+      toast.success("Item removed");
+      refetch();
+    } catch (error) {
+      toast.error("Failed to remove item");
+    } finally {
+      setDeleteLoadingId(null);
+    }
+  };
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-16">
-      <h1 className="text-3xl font-serif mb-10">Cart</h1>
-{/* EMPTY CART */}
-{cartData.length === 0 && !loading && (
-  <div className="text-center py-20">
-    <p className="text-lg mb-6">Your cart is empty</p>
+    <section className="min-h-screen bg-gradient-to-b from-[#f8fafc] to-[#eef2f7] py-16 px-6">
+      <div className="max-w-7xl mx-auto">
 
-    <Link
-      to="/"
-      className="inline-block bg-[#FF2C55] text-white px-8 py-3 rounded-full font-semibold"
-    >
-      CONTINUE SHOPPING
-    </Link>
-  </div>
-)}
+        <h1 className="text-4xl font-semibold text-gray-800 mb-12 tracking-tight">
+          Your Cart
+        </h1>
 
-{cartData.length > 0 && (
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* ================= EMPTY STATE ================= */}
+        {cartData.length === 0 && !loading && (
+          <div className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-3xl shadow-lg p-20 text-center">
+            <div className="text-7xl mb-6">🛍️</div>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              Your cart feels lonely
+            </h2>
+            <p className="text-gray-500 mb-10 max-w-md mx-auto">
+              Discover premium ebooks and start building your digital library.
+            </p>
 
-    {/* LEFT SIDE (PRODUCT DETAILS) */}
-    <div className="lg:col-span-2 border border-[#F3B3A6]">
-      <table className="w-full text-left">
-        <thead className="border-b border-[#F3B3A6]">
-          <tr className="text-sm font-semibold">
-            <th className="p-4">Product</th>
-            <th>Price</th>
-            <th>Subtotal</th>
-          </tr>
-        </thead>
+            <Link
+              to="/shop"
+              className="inline-block bg-black hover:bg-gray-800 transition text-white px-12 py-4 rounded-full font-medium tracking-wide"
+            >
+              Explore Books
+            </Link>
+          </div>
+        )}
 
-        <tbody>
-          {cartData.map((item) => {
-            const imageName = item.ebook.image?.split("/").pop();
+        {/* ================= CART ITEMS ================= */}
+        {cartData.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
-            return (
-          <tr key={item.id} className="border-b border-[#F3B3A6]">
-  <td className="p-4">
-    <div className="flex items-center gap-4 max-w-[350px]">
-<button
-  onClick={() => handleRemoveItem(item.id)}
-  disabled={deleteLoadingId === item.id}
-  className="w-6 h-6 border rounded-full text-sm flex-shrink-0 flex items-center justify-center"
->
-  {deleteLoadingId === item.id ? (
-    <span className="w-4 h-4 border-2 border-gray-400 border-t-red-500 rounded-full animate-spin"></span>
-  ) : (
-    "×"
-  )}
-</button>
+            {/* LEFT SIDE */}
+            <div className="lg:col-span-2 space-y-6">
+              {cartData.map((item) => {
+                const imageName = item.ebook.image?.split("/").pop();
 
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-2xl shadow-md p-6 flex items-center justify-between hover:shadow-xl transition"
+                  >
+                    {/* Product */}
+                    <div className="flex items-center gap-6">
+                      <img
+                        src={`${IMG_URL}${imageName}`}
+                        alt={item.ebook.title}
+                        className="w-24 h-32 object-cover rounded-xl shadow-sm"
+                      />
 
-      <img
-        src={`${IMG_URL}${imageName}`}
-        alt={item.ebook.title}
-        className="w-16 h-20 object-cover flex-shrink-0"
-      />
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-800">
+                          {item.ebook.title}
+                        </h3>
+                        <p className="text-gray-500 mt-2 text-sm">
+                          ₹{Number(item.price).toLocaleString()}
+                        </p>
 
-      <span className="text-red-500  px-2 py-1 truncate">
-        {item.ebook.title}
-      </span>
-    </div>
-  </td>
+                        <button
+                          onClick={() => handleRemoveItem(item.id)}
+                          disabled={deleteLoadingId === item.id}
+                          className="mt-4 text-sm text-red-500 hover:underline"
+                        >
+                          {deleteLoadingId === item.id
+                            ? "Removing..."
+                            : "Remove item"}
+                        </button>
+                      </div>
+                    </div>
 
-  <td className="text-red-500 whitespace-nowrap">
-    ₹{Number(item.price).toLocaleString()}
-  </td>
+                    {/* Total */}
+                    <div className="text-right">
+                      <p className="text-xl font-semibold text-gray-800">
+                        ₹{(
+                          Number(item.price) * Number(item.quantity)
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-  <td className="text-red-500 whitespace-nowrap">
-    ₹{(Number(item.price) * Number(item.quantity)).toLocaleString()}
-  </td>
-</tr>
+            {/* RIGHT SIDE SUMMARY */}
+            <div className="sticky top-24 h-fit">
+              <div className="bg-black text-white rounded-3xl p-10 shadow-2xl">
+                <h2 className="text-2xl font-semibold mb-8 tracking-wide">
+                  Order Summary
+                </h2>
 
-            );
-          })}
-        </tbody>
-      </table>
+                <div className="flex justify-between mb-5 text-gray-300">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toLocaleString()}</span>
+                </div>
 
-    </div>
+                <div className="flex justify-between mb-5 text-gray-300">
+                  <span>Shipping</span>
+                  <span className="text-green-400">Free</span>
+                </div>
 
-    {/* RIGHT SIDE (TOTAL CARD) */}
-    <div className="border border-[#F3B3A6] p-10 h-fit">
-      <h2 className="text-3xl font-serif mb-8">
-        Cart Totals
-      </h2>
+                <div className="border-t border-gray-700 my-6"></div>
 
-      <div className="flex justify-between py-4 border-b">
-        <span>Subtotal</span>
-        <span className="text-red-500">
-          ₹{subtotal_p.toLocaleString()}
-        </span>
+                <div className="flex justify-between text-xl font-semibold">
+                  <span>Total</span>
+                  <span>₹{subtotal.toLocaleString()}</span>
+                </div>
+
+                <Link
+                  to="/checkout"
+                  className="block text-center bg-white text-black font-medium py-4 rounded-full mt-10 hover:bg-gray-200 transition"
+                >
+                  Secure Checkout
+                </Link>
+
+                <p className="text-xs text-gray-400 mt-6 text-center">
+                  Encrypted & Secure Payments
+                </p>
+              </div>
+            </div>
+
+          </div>
+        )}
       </div>
-
-      <div className="py-5 border-b text-sm">
-        <p className="font-medium mb-1">Shipping</p>
-        <p>Free shipping</p>
-
-        <p className="font-semibold mt-2">
-          Shipping to 30 West Rocky Oak Lane, Velit
-          nostrud labor, Saepe non sunt libe
-          400058, Maharashtra.
-        </p>
-
-        <Link
-          to="/my-account/addresses"
-          className="text-red-500 mt-2 inline-block"
-        >
-          Change address
-        </Link>
-      </div>
-
-      <div className="flex justify-between py-5">
-        <span>Total</span>
-        <span className="text-red-500 text-lg">
-          ₹{subtotal_p.toLocaleString()}
-        </span>
-      </div>
-
-      <Link
-        to="/checkout"
-        className="block text-center bg-[#FF2C55] text-white py-4 rounded-full font-semibold mt-4"
-      >
-        PROCEED TO CHECKOUT
-      </Link>
-    </div>
-  </div>
-)}
-
     </section>
   );
 }
