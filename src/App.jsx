@@ -23,9 +23,6 @@ import Orders from "./pages/my-account/Orders";
 import Downloads from "./pages/my-account/Downloads";
 import AccountDetails from "./pages/my-account/AccountDetails";
 
-
-
-
 /* INNER APP (needed for useNavigate) */
 function AppContent() {
   const navigate = useNavigate();

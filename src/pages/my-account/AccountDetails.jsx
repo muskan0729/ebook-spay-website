@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePost } from "../../hooks/usePost";
 
 const AccountDetails = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ const AccountDetails = () => {
     confirmPassword: "",
   });
 
+  const { execute, loading, error } = usePost("change-password");
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -18,36 +21,48 @@ const AccountDetails = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // later you will connect API here
-    console.log("Account Details Updated:", formData);
-    alert("Account details saved (UI only)");
+    // Basic validation
+    if (!formData.newPassword || !formData.confirmPassword) {
+      alert("Please fill all password fields");
+      return;
+    }
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      await execute({
+        current_password: formData.currentPassword,
+        new_password: formData.newPassword,
+        new_password_confirmation: formData.confirmPassword,
+      });
+
+      alert("Password changed successfully");
+
+      // Reset password fields only
+      setFormData({
+        ...formData,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
     <section>
-      <h1 className="text-4xl font-serif mb-8">Change Password </h1>
+      <h1 className="text-4xl font-serif mb-8">Change Password</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
 
-
         {/* Email */}
-        <div>
-          <label className="block mb-2 font-medium">
-            Email address <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full border border-[#F4B7B7] px-4 py-3 focus:outline-none"
-            required
-          />
-        </div>
-
         {/* Password Change */}
         <fieldset className="border border-[#F4B7B7] p-6 space-y-4">
           <legend className="font-medium px-2">
@@ -82,12 +97,19 @@ const AccountDetails = () => {
           />
         </fieldset>
 
+        {error && (
+          <p className="text-red-500 text-sm">
+            {error.message || "Something went wrong"}
+          </p>
+        )}
+
         {/* Save Button */}
         <button
           type="submit"
-          className="bg-[#FF2D55] text-white px-10 py-3 rounded-full font-semibold hover:opacity-90"
+          disabled={loading}
+          className="bg-[#FF2D55] text-white px-10 py-3 rounded-full font-semibold hover:opacity-90 disabled:opacity-50"
         >
-          Save changes
+          {loading ? "Saving..." : "Save changes"}
         </button>
       </form>
     </section>
