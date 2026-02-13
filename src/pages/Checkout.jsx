@@ -1,283 +1,254 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { useGet } from "../hooks/useGet";
+import { useState } from "react";
+import { useCart } from "../context/CartContext";
 
 export default function Checkout() {
-  const { data, loading, error } = useGet("cart");
-
-  const [orderItems, setOrderItems] = useState([]);
-  const [subtotal, setSubtotal] = useState(0);
+  const { cart, subtotal } = useCart();
   const [paymentMethod, setPaymentMethod] = useState("cod");
 
-  useEffect(() => {
-    if (data?.items?.length > 0) {
-      const items = data.items.map((item) => ({
-        id: item.id,
-        name: item.ebook.title,
-        price: Number(item.price),
-        qty: Number(item.quantity),
-        total: Number(item.price) * Number(item.quantity),
-        image: item.ebook.image || "/placeholder.png",
-      }));
-
-      setOrderItems(items);
-      setSubtotal(Number(data.subtotal));
-    }
-  }, [data]);
-
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center text-gray-500">
-        Loading checkout…
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center text-red-500">
-        Failed to load checkout
-      </div>
-    );
-  }
+  const orderItems = cart.map((item) => ({
+    id: item.id,
+    name: item.title,
+    price: Number(item.price),
+    image: item.image || "/placeholder.png",
+  }));
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-16">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+    <section className="max-w-7xl mx-auto px-6 py-20">
+      {/* PAGE TITLE */}
+      <div className="mb-12">
+        <h1 className="text-4xl font-serif mb-2">Checkout</h1>
+        <p className="text-gray-500">
+          Complete your purchase securely in just a few steps
+        </p>
+      </div>
 
-        {/* ================= LEFT : FORM ================= */}
-        <div className="space-y-12">
+      {/* ===== OUTER CARD (BACKGROUND LAYER) ===== */}
+      <div className="bg-[#FAFAFA] rounded-3xl mt-0 p-8 lg:p-14 shadow-sm">
 
-          {/* CONTACT */}
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-serif">Contact</h2>
-              <Link to="/login" className="text-sm underline">
-                Log in
-              </Link>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_410px] gap-16">
 
-            <input
-              type="email"
-              placeholder="Email address"
-              className="w-full border px-4 py-3 rounded"
-            />
-          </div>
+          {/* ================= LEFT : FORM ================= */}
+          <div className="space-y-14">
 
-          {/* BILLING */}
-          <div>
-            <h2 className="text-xl font-serif mb-6">
-              Billing Details
-            </h2>
+            {/* CONTACT */}
+            <section className="max-w-xl">
+              <h2 className="section-title">Contact</h2>
+              <input type="email" placeholder="Email address" className="input" />
+            </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input className="input" placeholder="First name *" />
-              <input className="input" placeholder="Last name *" />
-            </div>
+            {/* BILLING */}
+            <section className="max-w-xl">
+              <h2 className="section-title">Billing Details</h2>
 
-            <select className="input mt-4">
-              <option>India</option>
-            </select>
-
-            <input
-              className="input mt-4"
-              placeholder="House number and street name *"
-            />
-
-            <input
-              className="input mt-4"
-              placeholder="Apartment, suite, unit etc. (optional)"
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              <input className="input" placeholder="Town / City *" />
-              <select className="input">
-                <option>Maharashtra</option>
-              </select>
-              <input className="input" placeholder="Postcode / ZIP *" />
-            </div>
-
-            <input
-              className="input mt-4"
-              placeholder="Phone *"
-            />
-
-            <textarea
-              className="input mt-6"
-              placeholder="Notes about your order, e.g. special notes for delivery."
-            />
-          </div>
-
-          {/* SHIPPING */}
-          <div>
-            <h2 className="text-xl font-serif mb-4">
-              Shipping
-            </h2>
-            <div className="border rounded px-4 py-3">
-              Free shipping
-            </div>
-          </div>
-
-          {/* PAYMENT */}
-          <div>
-            <h2 className="text-xl font-serif mb-4">
-              Payment
-            </h2>
-
-            <div className="border rounded divide-y">
-
-              {/* COD */}
-              <label className="flex items-start gap-3 p-4 cursor-pointer">
-                <input
-                  type="radio"
-                  checked={paymentMethod === "cod"}
-                  onChange={() => setPaymentMethod("cod")}
-                />
-                <div>
-                  <p className="font-medium">Cash on delivery</p>
-                  <p className="text-sm text-gray-600">
-                    Pay with cash upon delivery.
-                  </p>
-                </div>
-              </label>
-
-              {/* AIRPAY */}
-              <label className="flex items-center gap-3 p-4 cursor-pointer">
-                <input
-                  type="radio"
-                  checked={paymentMethod === "airpay"}
-                  onChange={() => setPaymentMethod("airpay")}
-                />
-                <span>Airpay</span>
-              </label>
-
-              {/* RAZORPAY */}
-              <label className="flex items-center gap-3 p-4 cursor-pointer">
-                <input
-                  type="radio"
-                  checked={paymentMethod === "razorpay"}
-                  onChange={() => setPaymentMethod("razorpay")}
-                />
-                <span>Credit Card / Debit Card / NetBanking</span>
-              </label>
-
-              {/* SABPAISA */}
-              <label className="flex items-center gap-3 p-4 cursor-pointer">
-                <input
-                  type="radio"
-                  checked={paymentMethod === "sabpaisa"}
-                  onChange={() => setPaymentMethod("sabpaisa")}
-                />
-                <span>Sabpaisa</span>
-              </label>
-            </div>
-
-            <p className="text-xs text-gray-500 mt-4">
-              Your personal data will be used to process your order and
-              support your experience throughout this website.
-            </p>
-
-            <div className="flex items-center gap-3 mt-4">
-              <input type="checkbox" />
-              <p className="text-sm">
-                I have read and agree to the website terms and conditions
-              </p>
-            </div>
-
-            {/* PLACE ORDER */}
-            <button
-              className="
-                mt-8
-                w-full
-                py-4
-                rounded
-                text-white
-                font-semibold
-                bg-gradient-to-r from-pink-500 to-red-500
-                hover:opacity-90
-              "
-            >
-              🔒 PLACE ORDER ₹{subtotal.toLocaleString()}
-            </button>
-          </div>
-        </div>
-
-        {/* ================= RIGHT : SUMMARY ================= */}
-        <div className="bg-[#FAFAFA] border rounded-lg p-6 h-fit sticky top-20">
-
-          {orderItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex gap-4 mb-6"
-            >
-              <div className="relative">
-                <img
-                  src={item.image}
-                  className="w-16 h-20 object-cover border"
-                />
-                <span className="absolute -top-2 -right-2 bg-black text-white text-xs w-6 h-6 flex items-center justify-center rounded-full">
-                  {item.qty}
-                </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input className="input" placeholder="First name" />
+                <input className="input" placeholder="Last name" />
               </div>
 
-              <div className="flex-1">
-                <p className="text-sm font-medium">
-                  {item.name}
+              <select className="input mt-4">
+                <option>India</option>
+              </select>
+
+              <input className="input mt-4" placeholder="Street address" />
+              <input className="input mt-4" placeholder="Apartment (optional)" />
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <input className="input" placeholder="City" />
+                <select className="input">
+                  <option>Maharashtra</option>
+                </select>
+                <input className="input" placeholder="ZIP Code" />
+              </div>
+
+              <input className="input mt-4" placeholder="Phone number" />
+              <textarea className="input mt-6" placeholder="Order notes (optional)" />
+            </section>
+
+            {/* SHIPPING */}
+            <section className="max-w-xl">
+              <h2 className="section-title">Shipping</h2>
+              <div className="soft-box">
+                🚚 Free shipping across India
+              </div>
+            </section>
+
+            {/* PAYMENT */}
+            <section className="max-w-xl">
+              <h2 className="section-title">Payment Method</h2>
+
+              <div className="card divide-y">
+                {[
+                  { key: "cod", label: "Cash on Delivery", desc: "Pay when your order arrives" },
+                  { key: "razorpay", label: "Card / NetBanking" },
+                  { key: "airpay", label: "Airpay" },
+                  { key: "sabpaisa", label: "Sabpaisa" },
+                ].map((p) => (
+                  <label
+                    key={p.key}
+                    className="flex gap-3 p-4 cursor-pointer hover:bg-gray-50"
+                  >
+                    <input
+                      type="radio"
+                      checked={paymentMethod === p.key}
+                      onChange={() => setPaymentMethod(p.key)}
+                    />
+                    <div>
+                      <p className="font-medium">{p.label}</p>
+                      {p.desc && (
+                        <p className="text-sm text-gray-500">{p.desc}</p>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3 mt-6">
+                <input type="checkbox" />
+                <p className="text-sm text-gray-600">
+                  I agree to the terms & conditions
                 </p>
               </div>
 
-              <p className="text-red-500 font-semibold">
-                ₹{item.total.toLocaleString()}
+              <button className="cta-btn">
+                🔒 Place Order • ₹{subtotal.toLocaleString()}
+              </button>
+            </section>
+          </div>
+
+          {/* ================= RIGHT : ORDER SUMMARY ================= */}
+          <aside className="summary-card">
+            <h3 className="summary-title">Order Summary</h3>
+
+            {orderItems.length === 0 && (
+              <p className="text-sm text-gray-500 text-center">
+                Your cart is empty
               </p>
-            </div>
-          ))}
+            )}
 
-          {/* COUPON */}
-          <div className="flex gap-3 mb-6">
-            <input
-              className="flex-1 border px-3 py-2 rounded"
-              placeholder="Coupon Code"
-            />
-            <button className="bg-black text-white px-6 rounded">
-              APPLY
-            </button>
-          </div>
-          
-          {/* TOTALS */}
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span className="text-red-500">
-                ₹{subtotal.toLocaleString()}
-              </span>
-            </div>
+            {orderItems.map((item) => (
+              <div key={item.id} className="summary-item">
+                <img src={item.image} alt={item.name} className="summary-img" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium leading-snug">
+                    {item.name}
+                  </p>
+                </div>
+                <p className="text-sm font-semibold text-red-500">
+                  ₹{item.price.toLocaleString()}
+                </p>
+              </div>
+            ))}
 
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span>Free shipping</span>
+            <div className="summary-totals">
+              <div className="row">
+                <span>Subtotal</span>
+                <span>₹{subtotal.toLocaleString()}</span>
+              </div>
+              <div className="row">
+                <span>Shipping</span>
+                <span>Free</span>
+              </div>
+              <div className="row total">
+                <span>Total</span>
+                <span>₹{subtotal.toLocaleString()}</span>
+              </div>
             </div>
-
-            <div className="flex justify-between font-semibold text-lg pt-4 border-t">
-              <span>Total</span>
-              <span className="text-red-500">
-                ₹{subtotal.toLocaleString()}
-              </span>
-            </div>
-          </div>
+          </aside>
         </div>
       </div>
 
-      {/* INPUT STYLE */}
-      <style>
-        {`
-          .input {
-            width: 100%;
-            border: 1px solid #ddd;
-            padding: 12px;
-            border-radius: 4px;
-          }
-        `}
-      </style>
+      {/* ================= STYLES ================= */}
+      <style>{`
+        .input {
+          width: 100%;
+          border: 1px solid #ddd;
+          padding: 13px 14px;
+          border-radius: 10px;
+          font-size: 14px;
+          background: white;
+        }
+
+        .section-title {
+          font-size: 1.3rem;
+          font-family: serif;
+          margin-bottom: 1rem;
+        }
+
+        .soft-box {
+          background: white;
+          border: 1px dashed #e5e5e5;
+          padding: 14px;
+          border-radius: 12px;
+          font-size: 14px;
+        }
+
+        .card {
+          border: 1px solid #e5e5e5;
+          border-radius: 14px;
+          background: white;
+        }
+
+        .cta-btn {
+          margin-top: 2.5rem;
+          width: 100%;
+          padding: 15px;
+          border-radius: 999px;
+          font-size: 16px;
+          font-weight: 600;
+          color: white;
+          background: linear-gradient(to right, #ec4899, #ef4444);
+        }
+
+        .summary-card {
+          background: white;
+          border-radius: 20px;
+          padding: 20px;
+          height: fit-content;
+          position: sticky;
+          top: 120px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        }
+
+        .summary-title {
+          font-family: serif;
+          font-size: 1.4rem;
+          margin-bottom: 1.2rem;
+        }
+
+        .summary-item {
+          display: flex;
+          gap: 12px;
+          padding-bottom: 14px;
+          margin-bottom: 14px;
+          border-bottom: 1px solid #eee;
+        }
+
+        .summary-img {
+          width: 44px;
+          height: 60px;
+          object-fit: cover;
+          border-radius: 8px;
+          border: 1px solid #ddd;
+        }
+
+        .summary-totals {
+          margin-top: 1.5rem;
+          font-size: 14px;
+        }
+
+        .row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+
+        .row.total {
+          font-weight: 600;
+          font-size: 16px;
+          padding-top: 12px;
+          border-top: 1px solid #eee;
+        }
+      `}</style>
     </section>
   );
 }

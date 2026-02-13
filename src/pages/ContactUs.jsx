@@ -1,4 +1,4 @@
-import contactHero from "../images/contact-hero.jpg";
+import contactHero from "../assets/images/contact-hero.jpg";
 
 export default function ContactUs() {
   return (

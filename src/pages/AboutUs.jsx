@@ -1,5 +1,5 @@
-import aboutHero from "../images/about-hero.jpg";
-import bookshelf from "../images/bookshelf.jpg";
+import aboutHero from "../assets/images/about-hero.jpg";
+import bookshelf from "../assets/images/bookshelf.jpg";
 
 export default function AboutUs() {
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import ProductCard from "../components/ProductCard";
 import { useGet } from "../hooks/useGet";
-import bannerImage from "../images/banner.jpg";
+import bannerImage from "../assets/images/banner.jpg";
 
 const ShopPage = () => {
   // Pagination
