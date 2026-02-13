@@ -3,14 +3,30 @@
   import { removeFromCartManager } from "../../utils/cartManager";
   import { getCartDB } from "../../indexeddb/cartDB"; // IndexedDB fetch
   import { useEffect, useState } from "react";
+import { useDelete } from "../../hooks/useDelete";
+import { toast } from "sonner";
+  
 
   export default function CartPopup({ open, setOpen }) {
       const IMG_URL = import.meta.env.VITE_IMG_URL;
 
     const isLoggedIn = !!localStorage.getItem("token");
-    const { data,loading, } = useGet(open && isLoggedIn ? "cart" : null);
-  console.log("cart fasat",data);
+    const { data,loading,refetch } = useGet(open && isLoggedIn ? "cart" : null);
+  // console.log("cart fasat",data);
     const [cart, setCart] = useState([]);
+    const {executeDelete} = useDelete();
+
+    const handleRemoveItem = async (id) => {
+      try{
+        await executeDelete(`cart/item/${id}`);
+        toast.success("product removed");
+        refetch();
+      }catch(error){
+        toast.error("something went wrong");
+      }
+    }
+
+    
 
     // Load cart data
     useEffect(() => {
@@ -35,18 +51,18 @@
     );
 
     // Remove item
-    const handleRemoveItem = async (id) => {
-      await removeFromCartManager(id); // will handle API or IndexedDB automatically
+    // const handleRemoveItem = async (id) => {
+    //   await removeFromCartManager(id); // will handle API or IndexedDB automatically
 
-      // Refresh cart
-      if (!isLoggedIn) {
-        const updatedCart = await getCartDB();
-        setCart(updatedCart);
-      } else {
-        // for logged in users, refetch can be done via your useGet hook or API call
-        setCart(cart.filter(item => item.id !== id));
-      }
-    };
+    //   // Refresh cart
+    //   if (!isLoggedIn) {
+    //     const updatedCart = await getCartDB();
+    //     setCart(updatedCart);
+    //   } else {
+    //     // for logged in users, refetch can be done via your useGet hook or API call
+    //     setCart(cart.filter(item => item.id !== id));
+    //   }
+    // };
 
     if (!open) return null;
 

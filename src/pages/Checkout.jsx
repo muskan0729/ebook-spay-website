@@ -1,254 +1,248 @@
-import { useState } from "react";
-import { useCart } from "../context/CartContext";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+// import Cartprocess from "../components/Cartprocess";
+import { useGet } from "../hooks/useGet";
+  import Loader from "../components/Loader";
 
-export default function Checkout() {
-  const { cart, subtotal } = useCart();
-  const [paymentMethod, setPaymentMethod] = useState("cod");
 
-  const orderItems = cart.map((item) => ({
-    id: item.id,
-    name: item.title,
-    price: Number(item.price),
-    image: item.image || "/placeholder.png",
-  }));
+const Checkout = () => {
+  const { data, loading, error } = useGet("cart");
+  const IMG_URL = import.meta.env.VITE_IMG_URL;
+
+  const [orderItems, setOrderItems] = useState([]);
+  const [subtotal, setSubtotal] = useState(0);
+
+  // 🔹 Map cart API → checkout UI
+  useEffect(() => {
+    if (data?.items?.length > 0) {
+      const formattedItems = data.items.map((item) => ({
+        id: item.id,
+        qty: Number(item.quantity),
+        name: item.ebook.title,
+        oldPrice: Number(item.ebook.price),
+        newPrice: Number(item.price),
+        total: Number(item.price) * Number(item.quantity),
+        desc: item.ebook.description,
+        img: item.ebook.image?.split("/").pop(), // replace with real image later
+      }));
+      setOrderItems(formattedItems);
+      setSubtotal(Number(data.subtotal));
+    } else {
+      setOrderItems([]);
+      setSubtotal(0);
+    }
+  }, [data]);
+
+  // 🔹 Loading state
+  if (loading) {
+    return (
+      <Loader />
+    );
+  }
+
+  // 🔹 Error state
+  if (error) {
+    return (
+      <div className="text-center py-20 text-red-500">
+        Failed to load checkout
+      </div>
+    );
+  }
+
+
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-20">
-      {/* PAGE TITLE */}
-      <div className="mb-12">
-        <h1 className="text-4xl font-serif mb-2">Checkout</h1>
-        <p className="text-gray-500">
-          Complete your purchase securely in just a few steps
-        </p>
-      </div>
+    <>
+      {/* <Cartprocess /> */}
 
-      {/* ===== OUTER CARD (BACKGROUND LAYER) ===== */}
-      <div className="bg-[#FAFAFA] rounded-3xl mt-0 p-8 lg:p-14 shadow-sm">
+      <div className="w-full bg-white py-12">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_410px] gap-16">
+            {/* LEFT SIDE FORM */}
+            <div className="lg:col-span-2">
 
-          {/* ================= LEFT : FORM ================= */}
-          <div className="space-y-14">
-
-            {/* CONTACT */}
-            <section className="max-w-xl">
-              <h2 className="section-title">Contact</h2>
-              <input type="email" placeholder="Email address" className="input" />
-            </section>
-
-            {/* BILLING */}
-            <section className="max-w-xl">
-              <h2 className="section-title">Billing Details</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input className="input" placeholder="First name" />
-                <input className="input" placeholder="Last name" />
-              </div>
-
-              <select className="input mt-4">
-                <option>India</option>
-              </select>
-
-              <input className="input mt-4" placeholder="Street address" />
-              <input className="input mt-4" placeholder="Apartment (optional)" />
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <input className="input" placeholder="City" />
-                <select className="input">
-                  <option>Maharashtra</option>
-                </select>
-                <input className="input" placeholder="ZIP Code" />
-              </div>
-
-              <input className="input mt-4" placeholder="Phone number" />
-              <textarea className="input mt-6" placeholder="Order notes (optional)" />
-            </section>
-
-            {/* SHIPPING */}
-            <section className="max-w-xl">
-              <h2 className="section-title">Shipping</h2>
-              <div className="soft-box">
-                🚚 Free shipping across India
-              </div>
-            </section>
-
-            {/* PAYMENT */}
-            <section className="max-w-xl">
-              <h2 className="section-title">Payment Method</h2>
-
-              <div className="card divide-y">
-                {[
-                  { key: "cod", label: "Cash on Delivery", desc: "Pay when your order arrives" },
-                  { key: "razorpay", label: "Card / NetBanking" },
-                  { key: "airpay", label: "Airpay" },
-                  { key: "sabpaisa", label: "Sabpaisa" },
-                ].map((p) => (
-                  <label
-                    key={p.key}
-                    className="flex gap-3 p-4 cursor-pointer hover:bg-gray-50"
-                  >
-                    <input
-                      type="radio"
-                      checked={paymentMethod === p.key}
-                      onChange={() => setPaymentMethod(p.key)}
-                    />
-                    <div>
-                      <p className="font-medium">{p.label}</p>
-                      {p.desc && (
-                        <p className="text-sm text-gray-500">{p.desc}</p>
-                      )}
-                    </div>
-                  </label>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-3 mt-6">
-                <input type="checkbox" />
-                <p className="text-sm text-gray-600">
-                  I agree to the terms & conditions
-                </p>
-              </div>
-
-              <button className="cta-btn">
-                🔒 Place Order • ₹{subtotal.toLocaleString()}
-              </button>
-            </section>
-          </div>
-
-          {/* ================= RIGHT : ORDER SUMMARY ================= */}
-          <aside className="summary-card">
-            <h3 className="summary-title">Order Summary</h3>
-
-            {orderItems.length === 0 && (
-              <p className="text-sm text-gray-500 text-center">
-                Your cart is empty
+              {/* Contact Info */}
+              <h2 className="text-2xl font-semibold mb-2">
+                Contact information
+              </h2>
+              <p className="text-sm text-gray-600 mb-5">
+                We'll use this email to send order updates.
               </p>
-            )}
 
-            {orderItems.map((item) => (
-              <div key={item.id} className="summary-item">
-                <img src={item.image} alt={item.name} className="summary-img" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium leading-snug">
-                    {item.name}
-                  </p>
-                </div>
-                <p className="text-sm font-semibold text-red-500">
-                  ₹{item.price.toLocaleString()}
+              <input
+                type="email"
+                placeholder="Email address"
+                className="w-full border px-4 py-3 rounded outline-none focus:border-black"
+              />
+
+              <p className="text-xs text-gray-600 mt-2">
+                You are currently checking out as a guest.
+              </p>
+
+              {/* Billing Address */}
+              <h2 className="text-2xl font-semibold mt-12 mb-2">
+                Billing address
+              </h2>
+
+              <input
+                type="text"
+                placeholder="Country"
+                className="w-full border px-4 py-3 rounded outline-none focus:border-black mt-4"
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <input
+                  type="text"
+                  placeholder="First name"
+                  className="w-full border px-4 py-3 rounded outline-none focus:border-black"
+                />
+                <input
+                  type="text"
+                  placeholder="Last name"
+                  className="w-full border px-4 py-3 rounded outline-none focus:border-black"
+                />
+              </div>
+
+              <input
+                type="text"
+                placeholder="Address"
+                className="w-full border px-4 py-3 rounded outline-none focus:border-black mt-4"
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <input
+                  type="text"
+                  placeholder="City"
+                  className="w-full border px-4 py-3 rounded outline-none focus:border-black"
+                />
+                <input
+                  type="text"
+                  placeholder="State"
+                  className="w-full border px-4 py-3 rounded outline-none focus:border-black"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <input
+                  type="text"
+                  placeholder="PIN Code"
+                  className="w-full border px-4 py-3 rounded outline-none focus:border-black"
+                />
+                <input
+                  type="text"
+                  placeholder="Phone"
+                  className="w-full border px-4 py-3 rounded outline-none focus:border-black"
+                />
+              </div>
+
+              {/* Payment */}
+              <h2 className="text-2xl font-semibold mt-12 mb-4">
+                Payment options
+              </h2>
+
+              <div className="border rounded p-4">
+                <h3 className="font-semibold">Sabpaisa</h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  Pay securely via Sabpaisa.
                 </p>
               </div>
-            ))}
 
-            <div className="summary-totals">
-              <div className="row">
-                <span>Subtotal</span>
-                <span>₹{subtotal.toLocaleString()}</span>
+              <div className="flex items-center gap-3 mt-8">
+                <input type="checkbox" className="w-4 h-4" />
+                <p className="text-sm text-gray-700">
+                  Add a note to your order
+                </p>
               </div>
-              <div className="row">
-                <span>Shipping</span>
-                <span>Free</span>
-              </div>
-              <div className="row total">
-                <span>Total</span>
-                <span>₹{subtotal.toLocaleString()}</span>
+
+              <div className="flex flex-col md:flex-row justify-between items-center mt-10 gap-5">
+                <Link
+                  to="/view-cart"
+                  className="text-sm font-medium text-gray-800 hover:underline"
+                >
+                  ← Return to Cart
+                </Link>
+    
+                <Link to="/order">
+                  <button className="bg-[#ed2c64] hover:bg-[#ed2c64] text-white font-semibold px-10 py-3 rounded w-full md:w-auto">
+                    PLACE ORDER
+                  </button>
+                </Link>
               </div>
             </div>
-          </aside>
+
+            {/* RIGHT SIDE SUMMARY */}
+            <div className="border rounded-lg p-6 h-fit">
+              <h2 className="text-lg font-semibold mb-6">
+                Order summary
+              </h2>
+
+              {orderItems.length === 0 ? (
+                <p className="text-gray-500 text-sm">
+                  Your cart is empty
+                </p>
+              ) : (
+                <div className="space-y-8">
+                  {orderItems.map((item) => (
+                    <div key={item.id} className="flex gap-4">
+                      <div className="relative">
+                        <img
+                          src={`${IMG_URL}/${item.img}`}
+                          alt="product"
+                          className="w-14 h-14 rounded border"
+                        />
+                        <span className="absolute -top-2 -right-2 bg-gray-200 text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full">
+                          {item.qty}
+                        </span>
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex justify-between gap-4">
+                          <h3 className="text-sm font-semibold">
+                            {item.name}
+                          </h3>
+                          <p className="text-sm font-semibold text-orange-600">
+                            ₹{item.total.toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div className="flex gap-3 mt-2">
+                          <p className="text-xs line-through text-gray-400">
+                            ₹{item.oldPrice.toLocaleString()}
+                          </p>
+                          <p className="text-xs font-semibold text-orange-600">
+                            ₹{item.newPrice.toLocaleString()}
+                          </p>
+                        </div>
+
+                        <p className="text-xs text-gray-600 mt-3 line-clamp-2">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Totals */}
+              <div className="border-t mt-6 pt-5 flex justify-between text-sm">
+                <p>Subtotal</p>
+                <p className="font-semibold">
+                  ₹{subtotal.toLocaleString()}
+                </p>
+              </div>
+
+              <div className="border-t mt-5 pt-5 flex justify-between text-lg font-semibold">
+                <p>Total</p>
+                <p>₹{subtotal.toLocaleString()}</p>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
-
-      {/* ================= STYLES ================= */}
-      <style>{`
-        .input {
-          width: 100%;
-          border: 1px solid #ddd;
-          padding: 13px 14px;
-          border-radius: 10px;
-          font-size: 14px;
-          background: white;
-        }
-
-        .section-title {
-          font-size: 1.3rem;
-          font-family: serif;
-          margin-bottom: 1rem;
-        }
-
-        .soft-box {
-          background: white;
-          border: 1px dashed #e5e5e5;
-          padding: 14px;
-          border-radius: 12px;
-          font-size: 14px;
-        }
-
-        .card {
-          border: 1px solid #e5e5e5;
-          border-radius: 14px;
-          background: white;
-        }
-
-        .cta-btn {
-          margin-top: 2.5rem;
-          width: 100%;
-          padding: 15px;
-          border-radius: 999px;
-          font-size: 16px;
-          font-weight: 600;
-          color: white;
-          background: linear-gradient(to right, #ec4899, #ef4444);
-        }
-
-        .summary-card {
-          background: white;
-          border-radius: 20px;
-          padding: 20px;
-          height: fit-content;
-          position: sticky;
-          top: 120px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-        }
-
-        .summary-title {
-          font-family: serif;
-          font-size: 1.4rem;
-          margin-bottom: 1.2rem;
-        }
-
-        .summary-item {
-          display: flex;
-          gap: 12px;
-          padding-bottom: 14px;
-          margin-bottom: 14px;
-          border-bottom: 1px solid #eee;
-        }
-
-        .summary-img {
-          width: 44px;
-          height: 60px;
-          object-fit: cover;
-          border-radius: 8px;
-          border: 1px solid #ddd;
-        }
-
-        .summary-totals {
-          margin-top: 1.5rem;
-          font-size: 14px;
-        }
-
-        .row {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 8px;
-        }
-
-        .row.total {
-          font-weight: 600;
-          font-size: 16px;
-          padding-top: 12px;
-          border-top: 1px solid #eee;
-        }
-      `}</style>
-    </section>
+    </>
   );
-}
+};
+
+export default Checkout;

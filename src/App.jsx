@@ -35,6 +35,7 @@ import Downloads from "./pages/my-account/Downloads";
 import AccountDetails from "./pages/my-account/AccountDetails";
 import { Toaster } from "sonner";
 import ScrollTop from "./components/ScrollTop";
+import OrderComplete from "./pages/OrderComplete";
 
 
 /* INNER APP (for useNavigate) */
@@ -83,6 +84,7 @@ function AppContent() {
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/view-cart" element={<ViewCart />} />
+          <Route path="/order" element={<OrderComplete />} />
 
           {/* MY ACCOUNT */}
           <Route path="/my-account" element={<MyAccountLayout />}>
