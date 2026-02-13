@@ -92,7 +92,9 @@ const Header = ({ openLogin }) => {
             >
               <FiShoppingCart className="text-xl" />
               {/* <span className="font-medium">₹0.00</span> */}
-            </Link>
+            {/* </Link> */}
+            </button> 
+            
 
           </div>
         </div>
