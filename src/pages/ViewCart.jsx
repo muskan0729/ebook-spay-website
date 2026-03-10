@@ -1,34 +1,76 @@
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import { useGet } from "../hooks/useGet";
-import { useEffect, useState } from "react";
 import { useDelete } from "../hooks/useDelete";
-import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import Cartprocess from "../components/Cartprocess";
 
-export default function ViewCart() {
+const ViewCart = () => {
+  const { data, loading, error } = useGet("cart");
+  const { executeDelete } = useDelete("cart/item");
+
   const IMG_URL = import.meta.env.VITE_IMG_URL;
-  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
-  const { data, loading, refetch } = useGet("cart");
-  const [cartData, setCartData] = useState([]);
-  const { executeDelete } = useDelete();
 
+  const cartData = data?.items || [];
+
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+  const [cartItems, setCartItems] = useState([]);
+
+  // 🔹 Map API → UI format
   useEffect(() => {
-    if (data?.items) setCartData(data.items);
+    if (data?.items?.length > 0) {
+      const formattedItems = data.items.map((item) => ({
+        id: item.id,
+        name: item.ebook.title,
+        description: item.ebook.description,
+        oldPrice: Number(item.ebook.price),
+        newPrice: Number(item.price),
+        qty: Number(item.quantity),
+        image: item.ebook.image,
+      }));
+
+      setCartItems(formattedItems);
+    } else {
+      setCartItems([]);
+    }
   }, [data]);
 
-  const subtotal = Number(data?.subtotal || 0);
+  // 🔹 Remove single item
+ const removeItem = async (itemId) => {
+  try {
+    setDeleteLoadingId(itemId);
 
-  const handleRemoveItem = async (id) => {
-    try {
-      setDeleteLoadingId(id);
-      await executeDelete(`cart/item/${id}`);
-      toast.success("Item removed");
-      refetch();
-    } catch (error) {
-      toast.error("Failed to remove item");
-    } finally {
-      setDeleteLoadingId(null);
-    }
-  };
+    await executeDelete(`cart/item/${itemId}`);
+
+    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+
+  } catch (err) {
+    console.error("Failed to remove item", err);
+  } finally {
+    setDeleteLoadingId(null);
+  }
+};
+
+  // 🔹 Calculate subtotal (use cartItems not cartData)
+  const estimatedTotal = cartItems.reduce(
+    (total, item) => total + item.newPrice * item.qty,
+    0
+  );
+
+  if (loading) {
+    return (
+      <div className="text-center py-20 text-xl font-semibold">
+        Loading Cart...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20 text-red-500">
+        Failed to load cart
+      </div>
+    );
+  }
 
   return (
     <section className="min-h-screen bg-gradient-to-b from-[#f8fafc] to-[#eef2f7] py-16 px-6">
@@ -39,7 +81,7 @@ export default function ViewCart() {
         </h1>
 
         {/* ================= EMPTY STATE ================= */}
-        {cartData.length === 0 && !loading && (
+        {cartItems.length === 0 && !loading && (
           <div className="bg-white/70 backdrop-blur-md border border-gray-200 rounded-3xl shadow-lg p-20 text-center">
             <div className="text-7xl mb-6">🛍️</div>
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
@@ -59,13 +101,13 @@ export default function ViewCart() {
         )}
 
         {/* ================= CART ITEMS ================= */}
-        {cartData.length > 0 && (
+        {cartItems.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
             {/* LEFT SIDE */}
             <div className="lg:col-span-2 space-y-6">
-              {cartData.map((item) => {
-                const imageName = item.ebook.image?.split("/").pop();
+              {cartItems.map((item) => {
+                const imageName = item.image?.split("/").pop();
 
                 return (
                   <div
@@ -75,21 +117,22 @@ export default function ViewCart() {
                     {/* Product */}
                     <div className="flex items-center gap-6">
                       <img
-                        src={`${IMG_URL}${imageName}`}
-                        alt={item.ebook.title}
+                        src={`${IMG_URL}/${imageName}`}
+                        alt={item.name}
                         className="w-24 h-32 object-cover rounded-xl shadow-sm"
                       />
 
                       <div>
                         <h3 className="text-lg font-medium text-gray-800">
-                          {item.ebook.title}
+                          {item.name}
                         </h3>
+
                         <p className="text-gray-500 mt-2 text-sm">
-                          ₹{Number(item.price).toLocaleString()}
+                          ₹{item.newPrice.toLocaleString()}
                         </p>
 
                         <button
-                          onClick={() => handleRemoveItem(item.id)}
+                          onClick={() => removeItem(item.id)}
                           disabled={deleteLoadingId === item.id}
                           className="mt-4 text-sm text-red-500 hover:underline"
                         >
@@ -103,9 +146,7 @@ export default function ViewCart() {
                     {/* Total */}
                     <div className="text-right">
                       <p className="text-xl font-semibold text-gray-800">
-                        ₹{(
-                          Number(item.price) * Number(item.quantity)
-                        ).toLocaleString()}
+                        ₹{(item.newPrice * item.qty).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -116,13 +157,14 @@ export default function ViewCart() {
             {/* RIGHT SIDE SUMMARY */}
             <div className="sticky top-24 h-fit">
               <div className="bg-black text-white rounded-3xl p-10 shadow-2xl">
+
                 <h2 className="text-2xl font-semibold mb-8 tracking-wide">
                   Order Summary
                 </h2>
 
                 <div className="flex justify-between mb-5 text-gray-300">
                   <span>Subtotal</span>
-                  <span>₹{subtotal.toLocaleString()}</span>
+                  <span>₹{estimatedTotal.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between mb-5 text-gray-300">
@@ -134,7 +176,7 @@ export default function ViewCart() {
 
                 <div className="flex justify-between text-xl font-semibold">
                   <span>Total</span>
-                  <span>₹{subtotal.toLocaleString()}</span>
+                  <span>₹{estimatedTotal.toLocaleString()}</span>
                 </div>
 
                 <Link
@@ -147,6 +189,7 @@ export default function ViewCart() {
                 <p className="text-xs text-gray-400 mt-6 text-center">
                   Encrypted & Secure Payments
                 </p>
+
               </div>
             </div>
 
@@ -155,4 +198,6 @@ export default function ViewCart() {
       </div>
     </section>
   );
-}
+};
+
+export default ViewCart;

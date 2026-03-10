@@ -1,106 +1,146 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { FiAlertCircle, FiDownload, FiFileText } from "react-icons/fi";
+import { useGet } from "../../hooks/useGet";
+import Loader from "../../components/Loader";
 
 export default function Downloads() {
+  const userId = localStorage.getItem("user_id");
+  const { data, loading } = useGet(userId ? `user-downloads/${userId}` : null);
+  
+  const downloads = data?.data || [];
+  const hasDownloads = downloads.length > 0;
 
-  // Dummy downloadable items
-  const downloads = [
-    {
-      id: 1,
-      product: "Premium UI Kit",
-      order: "#1023",
-      date: "2025-01-12",
-      file: "/files/ui-kit.zip",
-    },
-    {
-      id: 2,
-      product: "React Admin Template",
-      order: "#1018",
-      date: "2025-01-05",
-      file: "/files/admin-template.zip",
-    },
-  ];
+  // Base URLs
+  const IMAGE_BASE_URL = 'https://omishajewels.com/Backend/public/uploads/ebook-images/';
+  const PDF_BASE_URL = 'https://omishajewels.com/Backend/public/uploads/ebook/';
 
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
+  // Function to get correct image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    // If it's already a full URL, extract just the filename
+    if (imagePath.startsWith('http')) {
+      const filename = imagePath.split('/').pop();
+      return `${IMAGE_BASE_URL}${filename}`;
+    }
+    
+    // Extract just the filename from the path
+    const filename = imagePath.split('/').pop();
+    return `${IMAGE_BASE_URL}${filename}`;
   };
 
+  // Function to handle PDF download
+  const handleDownload = (fileUrl, ebookTitle) => {
+    console.log("Original file URL:", fileUrl);
+    
+    // Extract just the filename
+    let filename = fileUrl;
+    if (fileUrl.includes('/')) {
+      const parts = fileUrl.split('/');
+      filename = parts[parts.length - 1];
+    }
+    
+    // Decode URL-encoded filename (like %20 for spaces)
+    filename = decodeURIComponent(filename);
+    
+    // Construct the correct PDF URL
+    const pdfUrl = `${PDF_BASE_URL}${filename}`;
+    console.log("Downloading from:", pdfUrl);
+    
+    window.open(pdfUrl, '_blank');
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full flex justify-center py-12">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (!hasDownloads) {
+    return (
+      <div className="w-full">
+        <div className="flex items-center gap-3 bg-[#E4B95B] text-white px-6 py-4 rounded-sm max-w-3xl">
+          <FiAlertCircle className="text-xl shrink-0" />
+          <p className="text-sm font-medium">No downloads available yet.</p>
+          <Link
+            to="/shop"
+            className="ml-auto text-sm font-semibold underline hover:opacity-90 transition"
+          >
+            BROWSE PRODUCTS
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-semibold">My Downloads</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Access your purchased digital products.
-        </p>
-      </div>
-
-      {/* Card */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-
-        {downloads.length === 0 ? (
-          <div className="p-10 text-center text-gray-500 space-y-4">
-            <p>No downloads available yet.</p>
-            <Link
-              to="/shop"
-              className="inline-block bg-black text-white px-6 py-2 rounded-full text-sm"
+    <div className="w-full">
+      <h2 className="text-2xl font-semibold mb-6">My Downloads</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {downloads.map((ebook) => {
+          const imageUrl = getImageUrl(ebook.image);
+          
+          return (
+            <div
+              key={ebook.id}
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
             >
-              Browse Products
-            </Link>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
+              {/* Book Cover Image */}
+              <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={ebook.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.log("Image failed to load:", imageUrl);
+                      e.target.onerror = null;
+                      // Use a more reliable placeholder
+                      e.target.src = 'https://placehold.co/200x150/4b2c2c/white?text=No+Cover';
+                    }}
+                  />
+                ) : (
+                  <FiFileText className="text-gray-400 text-5xl" />
+                )}
+              </div>
 
-            <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
-              <tr>
-                <th className="px-6 py-4 text-left">Product</th>
-                <th className="px-6 py-4 text-left">Order</th>
-                <th className="px-6 py-4 text-left">Date</th>
-                <th className="px-6 py-4 text-right">Download</th>
-              </tr>
-            </thead>
+              {/* Content */}
+              <div className="p-5">
+                <h3 className="font-semibold text-lg mb-2 line-clamp-1">
+                  {ebook.title}
+                </h3>
+                
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                  {ebook.description || "No description available"}
+                </p>
 
-            <tbody className="divide-y divide-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">
+                    Purchased: {new Date(ebook.purchased_at).toLocaleDateString()}
+                  </span>
 
-              {downloads.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition">
+                  <button
+                    onClick={() => handleDownload(ebook.file_url, ebook.title)}
+                    className="flex items-center gap-2 bg-[#B8964E] hover:bg-[#9E7F42] text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+                  >
+                    <FiDownload />
+                    Download PDF
+                  </button>
+                </div>
 
-                  <td className="px-6 py-4 font-medium text-black">
-                    {item.product}
-                  </td>
-
-                  <td className="px-6 py-4 text-gray-600">
-                    {item.order}
-                  </td>
-
-                  <td className="px-6 py-4 text-gray-600">
-                    {formatDate(item.date)}
-                  </td>
-
-                  <td className="px-6 py-4 text-right">
-                    <a
-                      href={item.file}
-                      download
-                      className="inline-flex items-center text-sm font-medium text-black hover:underline"
-                    >
-                      Download
-                    </a>
-                  </td>
-
-                </tr>
-              ))}
-
-            </tbody>
-
-          </table>
-        )}
-
+                {/* Order number */}
+                <p className="text-xs text-gray-400 mt-3">
+                  Order: {ebook.order_no}
+                </p>
+              </div>
+            </div>
+          );
+        })}
       </div>
-
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import Login from "./Login";
 import Register from "./Register";
 
+
 const AuthSidebar = ({ open, setOpen, view, setView }) => {
   return (
     <>
@@ -18,7 +19,6 @@ const AuthSidebar = ({ open, setOpen, view, setView }) => {
         transform transition-transform duration-300
         ${open ? "translate-x-0" : "translate-x-full"}`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h3 className="text-lg font-semibold">
             {view === "login" ? "Sign in" : "Create Account"}
@@ -26,19 +26,12 @@ const AuthSidebar = ({ open, setOpen, view, setView }) => {
           <button onClick={() => setOpen(false)}>✕</button>
         </div>
 
-        {/* Content */}
         <div className="p-5">
           {view === "login" ? (
-            <Login
-              switchToRegister={() => setView("register")}
-              onSuccess={() => setOpen(false)}   // Close after login
-            />
-          ) : (
-            <Register
-              switchToLogin={() => setView("login")}
-              onSuccess={() => setOpen(false)}   // Close after register
-            />
-          )}
+            <Login switchToRegister={() => setView("register")} />
+            ) : (
+            <Register switchToLogin={() => setView("login")} />
+            )}
         </div>
       </div>
     </>

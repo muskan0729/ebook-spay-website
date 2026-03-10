@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import pageImage from "../assets/images/books-page-title.jpg";
+// import pageImage from "../assets/images/books-page-title.jpg";
 
 const Cartprocess = () => {
   const location = useLocation();
@@ -14,11 +14,11 @@ const Cartprocess = () => {
   return (
     <div className="relative w-full h-56 md:h-64 overflow-hidden">
       {/* Background image */}
-      <img
+      {/* <img
         src={pageImage}
         alt="Page title"
         className="absolute inset-0 w-full h-full object-cover"
-      />
+      /> */}
 
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/50"></div>

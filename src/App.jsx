@@ -1,13 +1,12 @@
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
-
 
 /* COMMON */
 import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
 
 /* AUTH */
-import AuthSidebar from "./auth/AuthSidebar";
+import AuthSidebar from "./components/auth/AuthSidebar";
 
 /* CART */
 import { CartProvider } from "./context/CartContext";
@@ -26,6 +25,7 @@ import RefundCancellation from "./pages/RefundCancellation";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import Terms from "./pages/Terms";
 import ViewCart from "./pages/ViewCart";
+import OrderComplete from "./pages/OrderComplete";
 
 /* MY ACCOUNT */
 import MyAccountLayout from "./pages/my-account/MyAccountLayout";
@@ -33,16 +33,33 @@ import Dashboard from "./pages/my-account/Dashboard";
 import Orders from "./pages/my-account/Orders";
 import Downloads from "./pages/my-account/Downloads";
 import AccountDetails from "./pages/my-account/AccountDetails";
+
+/* ADMIN */
+import AdminLayout from "./components/common/AdminLayout";
+import AdminRoute from "./pages/admin/AdminRoute";
+import DashboardAdmin from "./pages/admin/Dashboard";
+import Categories from "./pages/admin/Categories";
+import Ebooks from "./pages/admin/Ebooks";
+import Allorders from "./pages/admin/Allorders";
+import Users from "./pages/admin/Users";
+import Transactions from "./pages/admin/Transactions";
+
+/* UTIL */
 import { Toaster } from "sonner";
 import ScrollTop from "./components/ScrollTop";
-import OrderComplete from "./pages/OrderComplete";
 
 
-/* INNER APP (for useNavigate) */
+/* ================= INNER APP ================= */
+
 function AppContent() {
-  const navigate = useNavigate();
 
-  /* 🔐 Auth Sidebar State */
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 👇 detect admin route
+  const isAdmin = location.pathname.startsWith("/admin");
+
+  /* AUTH SIDEBAR STATE */
   const [authOpen, setAuthOpen] = useState(false);
   const [authView, setAuthView] = useState("login");
 
@@ -53,66 +70,118 @@ function AppContent() {
 
   return (
     <>
-    <Toaster  position="bottom-left" richColors closeButton/>
-      {/* HEADER */}
-      <Header openLogin={openLogin} />
+      <Toaster position="bottom-left" richColors closeButton />
+
+      {/* HEADER (HIDDEN IN ADMIN) */}
+      {!isAdmin && <Header openLogin={openLogin} />}
 
       {/* AUTH SIDEBAR */}
-      <AuthSidebar
-        open={authOpen}
-        setOpen={setAuthOpen}
-        view={authView}
-        setView={setAuthView}
-      />
+      {!isAdmin && (
+        <AuthSidebar
+          open={authOpen}
+          setOpen={setAuthOpen}
+          view={authView}
+          setView={setAuthView}
+        />
+      )}
 
-      {/* PAGE CONTENT */}
+      {/* MAIN CONTENT */}
       <main className="min-h-screen bg-[#FEFCF9]">
         <Routes>
-          {/* PUBLIC ROUTES */}
+
+          {/* ================= PUBLIC ROUTES ================= */}
+
           <Route path="/" element={<Home />} />
+
           <Route path="/shop" element={<ShopPage />} />
 
-          {/* 🔥 PRODUCT DETAILS (FIXED) */}
           <Route path="/books/:id" element={<ProductDetails />} />
 
           <Route path="/checkout" element={<Checkout />} />
+
           <Route path="/about" element={<AboutUs />} />
+
           <Route path="/contact" element={<ContactUs />} />
+
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
           <Route path="/refund-policy" element={<RefundPolicy />} />
+
           <Route path="/refund-cancellation" element={<RefundCancellation />} />
+
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
+
           <Route path="/terms" element={<Terms />} />
+
           <Route path="/view-cart" element={<ViewCart />} />
+
           <Route path="/order" element={<OrderComplete />} />
 
-          {/* MY ACCOUNT */}
+
+          {/* ================= MY ACCOUNT ================= */}
+
           <Route path="/my-account" element={<MyAccountLayout />}>
+
             <Route index element={<Dashboard />} />
+
             <Route path="orders" element={<Orders />} />
+
             <Route path="downloads" element={<Downloads />} />
+
             <Route path="account-details" element={<AccountDetails />} />
+
           </Route>
+
+
+          {/* ================= ADMIN PANEL ================= */}
+
+          <Route element={<AdminRoute />}>
+
+            <Route path="/admin/*" element={<AdminLayout />}>
+
+              <Route index element={<DashboardAdmin />} />
+
+              <Route path="categories" element={<Categories />} />
+
+              <Route path="ebooks" element={<Ebooks />} />
+
+              <Route path="orders" element={<Allorders />} />
+
+              <Route path="users" element={<Users />} />
+
+              <Route path="transactions" element={<Transactions />} />
+
+            </Route>
+
+          </Route>
+
         </Routes>
       </main>
 
-      {/* 🔥 GLOBAL CART POPUP */}
-      <CartPopup />
+      {/* CART POPUP (HIDDEN IN ADMIN) */}
+      {!isAdmin && <CartPopup />}
 
-      {/* FOOTER */}
-      <Footer />
+      {/* FOOTER (HIDDEN IN ADMIN) */}
+      {!isAdmin && <Footer />}
     </>
   );
 }
 
-/* MAIN WRAPPER */
+
+/* ================= MAIN WRAPPER ================= */
+
 function App() {
   return (
     <BrowserRouter>
-     <ScrollTop />
+
+      <ScrollTop />
+
       <CartProvider>
+
         <AppContent />
+
       </CartProvider>
+
     </BrowserRouter>
   );
 }

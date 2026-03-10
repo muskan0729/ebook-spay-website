@@ -1,15 +1,22 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGet } from "../../hooks/useGet";
 import Loader from "../../components/Loader";
+import OrderSummaryModal from "../../components/OrderSummaryModal"; // Create this
 
 export default function Orders() {
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const userId = localStorage.getItem("user_id");
-
-  const { data, loading, error } = useGet(
-    userId ? `order-history/${userId}` : null
-  );
-
+  const { data, loading } = useGet(userId ? `order-history/${userId}` : null);
+  
   const orders = Array.isArray(data?.data) ? data.data : [];
+
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
@@ -24,121 +31,79 @@ export default function Orders() {
     return <Loader />;
   }
 
-  if (!userId) {
-    return (
-      <p className="text-center py-10 text-gray-500">
-        Please login to view your orders.
-      </p>
-    );
-  }
-
- return (
-  <div className="space-y-6">
-
-    {/* Header */}
+  return (
     <div>
-      <h2 className="text-2xl font-semibold">My Orders</h2>
-      <p className="text-sm text-gray-500 mt-1">
-        View and track all your recent purchases.
-      </p>
-    </div>
-
-    {/* Not Logged In */}
-    {!userId && (
-      <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-500">
-        Please login to view your orders.
+      {/* TABLE HEADER */}
+      <div className="hidden md:grid grid-cols-5 gap-4 border-b pb-3 mb-6 text-sm font-semibold uppercase tracking-wide text-gray-600">
+        <div>Order</div>
+        <div>Date</div>
+        <div>Status</div>
+        <div>Total</div>
+        <div>Actions</div>
       </div>
-    )}
 
-    {userId && (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      {/* ORDERS */}
+      <div className="space-y-8">
+        {orders.map((order) => (
+          <div
+            key={order.id}
+            className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start md:items-center border-b pb-6 text-sm"
+          >
+            {/* ORDER */}
+            <div className="font-medium">{order.order_no}</div>
 
-        <table className="w-full text-sm">
+            {/* DATE */}
+            <div>{formatDate(order.created_at)}</div>
 
-          <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
-            <tr>
-              <th className="px-6 py-4 text-left">Order</th>
-              <th className="px-6 py-4 text-left">Date</th>
-              <th className="px-6 py-4 text-left">Status</th>
-              <th className="px-6 py-4 text-left">Total</th>
-              <th className="px-6 py-4 text-right">Action</th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-100">
-
-            {orders.length === 0 && (
-              <tr>
-                <td colSpan="5" className="px-6 py-10 text-center text-gray-500">
-                  No orders found.
-                </td>
-              </tr>
-            )}
-
-            {orders.map((order) => {
-
-              const statusColor =
-                order.status === "completed"
+            {/* STATUS */}
+            <div>
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                order.status === "completed" 
                   ? "bg-green-100 text-green-700"
                   : order.status === "pending"
                   ? "bg-yellow-100 text-yellow-700"
-                  : "bg-gray-100 text-gray-600";
+                  : "bg-red-100 text-red-700"
+              }`}>
+                {order.status}
+              </span>
+            </div>
 
-              return (
-                <tr key={order.id} className="hover:bg-gray-50 transition">
+            {/* TOTAL */}
+            <div className="font-medium text-[#B8964E]">
+              ₹{order.bill_amount}
+            </div>
 
-                  {/* Order Number */}
-                  <td className="px-6 py-4 font-medium text-black">
-                    #{order.order_no}
-                  </td>
+            {/* ACTIONS */}
+            <div className="flex flex-wrap gap-2">
+              {order.canPay && (
+                <button className="px-4 py-1.5 rounded-full bg-[#B8964E] text-white text-xs font-medium hover:opacity-90 transition">
+                  PAY
+                </button>
+              )}
 
-                  {/* Date */}
-                  <td className="px-6 py-4 text-gray-600">
-                    {formatDate(order.created_at)}
-                  </td>
+              <button
+                onClick={() => handleViewOrder(order)}
+                className="px-4 py-1.5 rounded-full bg-[#B8964E] text-white text-xs font-medium hover:opacity-90 transition"
+              >
+                VIEW
+              </button>
 
-                  {/* Status Badge */}
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${statusColor}`}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
-
-                  {/* Total */}
-                  <td className="px-6 py-4 font-semibold text-black">
-                    ₹{order.bill_amount}
-                  </td>
-
-                  {/* Action */}
-                  <td className="px-6 py-4 text-right">
-                    <Link
-                      to={`/order-details/${order.id}`}
-                      className="inline-flex items-center gap-1 text-sm font-medium text-black hover:underline"
-                    >
-                      View
-                    </Link>
-                  </td>
-
-                </tr>
-              );
-            })}
-
-          </tbody>
-
-        </table>
-
+              {order.canCancel && (
+                <button className="px-4 py-1.5 rounded-full bg-[#B8964E] text-white text-xs font-medium hover:opacity-90 transition">
+                  CANCEL
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
-    )}
 
-    {error && (
-      <div className="text-center text-red-500 text-sm">
-        {error.message || "Something went wrong"}
-      </div>
-    )}
-
-  </div>
-);
-
+      {/* Order Summary Modal */}
+      <OrderSummaryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        order={selectedOrder}
+      />
+    </div>
+  );
 }

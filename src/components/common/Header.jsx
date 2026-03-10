@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FiUser, FiSearch, FiShoppingCart } from "react-icons/fi";
-// import logo from "../src/assets/images/logoo.png";
 import logo from "../../assets/images/logoo.png";
-import AuthSidebar from "../../auth/AuthSidebar";
-import SearchOverlay from "../../components/common/SearchOverlay";
-import CartDrawer from "../cart/CartDrawer";
-import { useGet } from "../../hooks/useGet";
 
+import AuthSidebar from "../auth/AuthSidebar";
+import SearchOverlay from "../common/SearchOverlay";
+import CartDrawer from "../cart/CartDrawer";
+
+import useAutoFetch from "../../hooks/useAutoFetch";
 
 const Header = ({ openLogin }) => {
+
   const navigate = useNavigate();
 
   const [authOpen, setAuthOpen] = useState(false);
@@ -17,40 +18,59 @@ const Header = ({ openLogin }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
 
-  const {data: cartData} = useGet("cart",2000);
+  /* ================= CART AUTO FETCH ================= */
 
-const subtotal = cartData?.subtotal || 0;
-console.log(subtotal);
+  const { data } = useAutoFetch("cart", 2000);
+
+  const subtotal = data?.subtotal || 0;
+
+  const formattedSubtotal = Number(subtotal).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  /* ================= AUTH ================= */
 
   const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
 
   const handleUserClick = () => {
-    if (token) {
-      navigate("/my-account");
-    } else {
+
+    if (!token) {
       setView("login");
       setAuthOpen(true);
+      return;
     }
+
+    if (role === "admin") {
+      navigate("/admin");
+    } else {
+      navigate("/my-account");
+    }
+
   };
 
   return (
     <>
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
 
           {/* LOGO */}
-          <Link to="/" className="flex flex-col items-start">
+          <Link to="/" className="flex items-center">
             <img
               src={logo}
               alt="Logo"
-              className="h-23 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
           </Link>
 
           {/* NAV */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium tracking-wide text-[#2E2E2E]">
             {["/", "/shop", "/about", "/contact"].map((path, i) => {
+
               const labels = ["HOME", "SHOP", "ABOUT US", "CONTACT US"];
+
               return (
                 <NavLink
                   key={path}
@@ -79,7 +99,7 @@ console.log(subtotal);
             {/* SEARCH */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="text-xl hover:text-[#B8964E] transition"
+              className="text-xl hover:text-[#B8964E]"
             >
               <FiSearch />
             </button>
@@ -87,32 +107,32 @@ console.log(subtotal);
             {/* USER */}
             <button
               onClick={handleUserClick}
-              className="text-xl hover:text-[#B8964E] transition cursor-pointer"
+              className="text-xl hover:text-[#B8964E]"
             >
               <FiUser />
             </button>
 
             {/* CART */}
-            {/* CART (DRAWER OPEN) */}
             <button
-                onClick={() => setCartOpen(true)}
-                className="flex items-center gap-1 hover:text-[#B8964E] transition cursor-pointer"
-                aria-label="Cart"
-              >
-                <FiShoppingCart />
+              onClick={() => setCartOpen(true)}
+              className="flex items-center gap-2 hover:text-[#B8964E]"
+            >
 
-                {/* SUBTOTAL */}
-                <span className="text-sm font-medium">
-                  ₹{subtotal}
-                </span>
-              </button> 
-            
+              <FiShoppingCart />
+
+              <span className="text-sm font-semibold">
+                ₹{formattedSubtotal}
+              </span>
+
+            </button>
 
           </div>
+
         </div>
+
       </header>
 
-      {/* AUTH */}
+      {/* AUTH SIDEBAR */}
       <AuthSidebar
         open={authOpen}
         setOpen={setAuthOpen}
@@ -129,7 +149,7 @@ console.log(subtotal);
       {/* CART DRAWER */}
       <CartDrawer
         open={cartOpen}
-        onClose={() => setCartOpen(false)}   // ✅ FIXED
+        onClose={() => setCartOpen(false)}
         openLogin={openLogin}
       />
     </>
