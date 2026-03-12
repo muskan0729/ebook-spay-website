@@ -386,9 +386,9 @@ return (
             </h2>
 
             <div className="border rounded p-4">
-              <h3 className="font-semibold">Sabpaisa</h3>
+              <h3 className="font-semibold">UPI</h3>
               <p className="text-sm text-gray-600 mt-2">
-                Pay securely via Sabpaisa.
+                Pay securely via UPI .
               </p>
             </div>
 
