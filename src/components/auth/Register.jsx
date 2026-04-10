@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { usePost } from "../../hooks/usePost";
 import { toast } from "sonner";
 
-const Register = ({ switchToLogin }) => {
-  const [formdata, setformdata] = useState({
+const Register = ({ switchToLogin, onSuccess }) => {
+  const { execute, loading } = usePost("register");
+
+  const [formdata, setFormData] = useState({
     name: "",
     email: "",
     password: "",
@@ -12,16 +14,15 @@ const Register = ({ switchToLogin }) => {
 
   const [formErrors, setFormErrors] = useState({});
 
-  const { loading, execute } = usePost("register");
-
+  /* ================= INPUT HANDLER ================= */
   const handleChange = (e) => {
-    setformdata({ ...formdata, [e.target.name]: e.target.value });
+    setFormData({ ...formdata, [e.target.name]: e.target.value });
 
-    // remove error while typing
+    // clear error on typing
     setFormErrors({ ...formErrors, [e.target.name]: "" });
   };
 
-  // frontend validation
+  /* ================= VALIDATION ================= */
   const validate = () => {
     let errors = {};
 
@@ -32,17 +33,17 @@ const Register = ({ switchToLogin }) => {
     if (!formdata.email.trim()) {
       errors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formdata.email)) {
-      errors.email = "Enter a valid email address";
+      errors.email = "Enter a valid email";
     }
 
-    if (!formdata.password.trim()) {
+    if (!formdata.password) {
       errors.password = "Password is required";
     } else if (formdata.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
+      errors.password = "Minimum 6 characters required";
     }
 
-    if (!formdata.password_confirmation.trim()) {
-      errors.password_confirmation = "Confirm password is required";
+    if (!formdata.password_confirmation) {
+      errors.password_confirmation = "Confirm your password";
     } else if (formdata.password !== formdata.password_confirmation) {
       errors.password_confirmation = "Passwords do not match";
     }
@@ -50,109 +51,135 @@ const Register = ({ switchToLogin }) => {
     return errors;
   };
 
+  /* ================= REGISTER ================= */
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // check validation
     const errors = validate();
     setFormErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      toast.error("Please fix the errors");
+      toast.error("Please fix form errors");
       return;
     }
 
     try {
       const res = await execute(formdata);
-      // console.log("registered", res);
-      if (res?.access_token) {
-        localStorage.setItem("token", res.access_token);
-        localStorage.setItem("token_type", res.token_type); // optional
-      }
-      toast.success("Registered successfully 🎉");
-      switchToLogin();
-    } catch (err) {
-      // console.log("Backend error:", err);
-      toast.error("Error");
 
-      // Laravel validation error format support
+      // 🚨 Ensure backend response is correct
+      if (!res || !res.access_token) {
+        throw new Error(res?.message || "Registration failed");
+      }
+
+      /* ================= STORE TOKEN ================= */
+      localStorage.setItem("token", res.access_token);
+
+      /* ================= STORE USER ================= */
+      const userData = {
+        id: res.user_id ?? null,
+        name: res.name ?? formdata.name,   // fallback (important)
+        email: res.email ?? formdata.email,
+        role: res.role || "user",
+      };
+
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      /* ================= SUCCESS ================= */
+      toast.success("Registered successfully 🎉");
+
+      // close sidebar or update UI
+      onSuccess?.(res);
+
+      if (!onSuccess) {
+        switchToLogin();
+      }
+
+    } catch (err) {
+      console.error("Register error:", err);
+
+      // Laravel validation errors
       if (err?.errors) {
         setFormErrors(err.errors);
-        toast.error("Validation error", {
-          description: "Please check the form fields",
-        });
-      } else {
-        toast.error("Something went wrong ❌");
       }
+
+      toast.error(
+        err?.message ||
+        err?.error ||
+        "Registration failed (try new email)"
+      );
     }
   };
 
+  /* ================= UI ================= */
   return (
     <>
       <form className="space-y-5" onSubmit={handleRegister}>
-        {/* Full Name */}
+
+        {/* NAME */}
         <div>
           <label className="block text-sm font-medium">Full Name</label>
           <input
-            className={`mt-1 w-full border px-3 py-2 rounded outline-none ${
-              formErrors.name ? "border-red-500" : "border-gray-300"
-            }`}
             name="name"
             value={formdata.name}
             onChange={handleChange}
+            className={`mt-1 w-full border px-3 py-2 rounded ${
+              formErrors.name ? "border-red-500" : "border-gray-300"
+            }`}
           />
           {formErrors.name && (
             <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
           )}
         </div>
 
-        {/* Email */}
+        {/* EMAIL */}
         <div>
           <label className="block text-sm font-medium">Email</label>
           <input
             type="email"
-            className={`mt-1 w-full border px-3 py-2 rounded outline-none ${
-              formErrors.email ? "border-red-500" : "border-gray-300"
-            }`}
             name="email"
             value={formdata.email}
             onChange={handleChange}
+            className={`mt-1 w-full border px-3 py-2 rounded ${
+              formErrors.email ? "border-red-500" : "border-gray-300"
+            }`}
           />
           {formErrors.email && (
             <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
           )}
         </div>
 
-        {/* Password */}
+        {/* PASSWORD */}
         <div>
           <label className="block text-sm font-medium">Password</label>
           <input
             type="password"
-            className={`mt-1 w-full border px-3 py-2 rounded outline-none ${
-              formErrors.password ? "border-red-500" : "border-gray-300"
-            }`}
             name="password"
             value={formdata.password}
             onChange={handleChange}
+            className={`mt-1 w-full border px-3 py-2 rounded ${
+              formErrors.password ? "border-red-500" : "border-gray-300"
+            }`}
           />
           {formErrors.password && (
             <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
           )}
         </div>
 
-        {/* Confirm Password */}
+        {/* CONFIRM PASSWORD */}
         <div>
-          <label className="block text-sm font-medium">Confirm Password</label>
+          <label className="block text-sm font-medium">
+            Confirm Password
+          </label>
           <input
             type="password"
-            className={`mt-1 w-full border px-3 py-2 rounded outline-none ${
+            name="password_confirmation"
+            value={formdata.password_confirmation}
+            onChange={handleChange}
+            className={`mt-1 w-full border px-3 py-2 rounded ${
               formErrors.password_confirmation
                 ? "border-red-500"
                 : "border-gray-300"
             }`}
-            name="password_confirmation"
-            value={formdata.password_confirmation}
-            onChange={handleChange}
           />
           {formErrors.password_confirmation && (
             <p className="text-red-500 text-sm mt-1">
@@ -161,11 +188,11 @@ const Register = ({ switchToLogin }) => {
           )}
         </div>
 
-        {/* Submit Button */}
+        {/* BUTTON */}
         <button
-          className="w-full bg-black text-white py-2.5 rounded disabled:opacity-50"
           type="submit"
           disabled={loading}
+          className="w-full bg-black text-white py-2.5 rounded disabled:opacity-50"
         >
           {loading ? "Registering..." : "Register"}
         </button>
