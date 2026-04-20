@@ -1,141 +1,156 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FiAlertCircle, FiDownload, FiFileText } from "react-icons/fi";
+import {
+  FiAlertCircle,
+  FiDownload,
+  FiFileText,
+  FiCalendar,
+  FiShoppingBag,
+} from "react-icons/fi";
 import { useGet } from "../../hooks/useGet";
 import Loader from "../../components/Loader";
 
 export default function Downloads() {
   const userId = localStorage.getItem("user_id");
-  const { data, loading } = useGet(userId ? `user-downloads/${userId}` : null);
-  
-  const downloads = data?.data || [];
+
+  const { data, loading, error } = useGet(
+    userId ? `user-downloads/${userId}` : null
+  );
+
+  const downloads = Array.isArray(data?.data) ? data.data : [];
   const hasDownloads = downloads.length > 0;
 
-  // Base URLs
-  const IMAGE_BASE_URL = 'https://omishajewels.com/Backend/public/uploads/ebook-images/';
-  const PDF_BASE_URL = 'https://omishajewels.com/Backend/public/uploads/ebook/';
-
-  // Function to get correct image URL
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    
-    // If it's already a full URL, extract just the filename
-    if (imagePath.startsWith('http')) {
-      const filename = imagePath.split('/').pop();
-      return `${IMAGE_BASE_URL}${filename}`;
+  // ================= DOWNLOAD HANDLER =================
+  const handleDownload = (fileUrl) => {
+    if (!fileUrl) {
+      alert("Download file not available.");
+      return;
     }
-    
-    // Extract just the filename from the path
-    const filename = imagePath.split('/').pop();
-    return `${IMAGE_BASE_URL}${filename}`;
+
+    window.open(fileUrl, "_blank", "noopener,noreferrer");
   };
 
-  // Function to handle PDF download
-  const handleDownload = (fileUrl, ebookTitle) => {
-    console.log("Original file URL:", fileUrl);
-    
-    // Extract just the filename
-    let filename = fileUrl;
-    if (fileUrl.includes('/')) {
-      const parts = fileUrl.split('/');
-      filename = parts[parts.length - 1];
-    }
-    
-    // Decode URL-encoded filename (like %20 for spaces)
-    filename = decodeURIComponent(filename);
-    
-    // Construct the correct PDF URL
-    const pdfUrl = `${PDF_BASE_URL}${filename}`;
-    console.log("Downloading from:", pdfUrl);
-    
-    window.open(pdfUrl, '_blank');
-  };
-
+  // ================= LOADING =================
   if (loading) {
     return (
-      <div className="w-full flex justify-center py-12">
+      <div className="w-full flex justify-center py-16">
         <Loader />
       </div>
     );
   }
 
+  // ================= ERROR =================
+  if (error) {
+    return (
+      <div className="w-full">
+        <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-xl">
+          Failed to load downloads. Please refresh and try again.
+        </div>
+      </div>
+    );
+  }
+
+  // ================= EMPTY =================
   if (!hasDownloads) {
     return (
       <div className="w-full">
-        <div className="flex items-center gap-3 bg-[#E4B95B] text-white px-6 py-4 rounded-sm max-w-3xl">
-          <FiAlertCircle className="text-xl shrink-0" />
-          <p className="text-sm font-medium">No downloads available yet.</p>
+        <div className="bg-gradient-to-r from-[#B8964E] to-[#9E7F42] text-white rounded-2xl p-8 flex flex-col md:flex-row md:items-center gap-5">
+          <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+            <FiAlertCircle className="text-2xl" />
+          </div>
+
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold mb-1">No Downloads Yet</h2>
+            <p className="text-sm text-white/90">
+              Once you purchase an ebook, it will appear here instantly.
+            </p>
+          </div>
+
           <Link
             to="/shop"
-            className="ml-auto text-sm font-semibold underline hover:opacity-90 transition"
+            className="bg-white text-[#8B6B2E] px-5 py-3 rounded-xl font-semibold hover:scale-105 transition"
           >
-            BROWSE PRODUCTS
+            Browse Products
           </Link>
         </div>
       </div>
     );
   }
 
+  // ================= MAIN =================
   return (
     <div className="w-full">
-      <h2 className="text-2xl font-semibold mb-6">My Downloads</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {downloads.map((ebook) => {
-          const imageUrl = getImageUrl(ebook.image);
-          
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-800">My Downloads</h2>
+        <p className="text-gray-500 mt-1">
+          Access and download your purchased ebooks anytime.
+        </p>
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-7">
+        {downloads.map((ebook, index) => {
+          const imageUrl = ebook.image; // backend already sends full URL
+
           return (
             <div
-              key={ebook.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
+              key={`${ebook.id}-${index}`}
+              className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition duration-300"
             >
-              {/* Book Cover Image */}
-              <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
+              {/* Cover */}
+              <div className="h-52 bg-gray-100 overflow-hidden">
                 {imageUrl ? (
                   <img
                     src={imageUrl}
                     alt={ebook.title}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      console.log("Image failed to load:", imageUrl);
                       e.target.onerror = null;
-                      // Use a more reliable placeholder
-                      e.target.src = 'https://placehold.co/200x150/4b2c2c/white?text=No+Cover';
+                      e.target.src =
+                        "https://placehold.co/500x300/4b2c2c/white?text=No+Cover";
                     }}
                   />
                 ) : (
-                  <FiFileText className="text-gray-400 text-5xl" />
+                  <div className="w-full h-full flex items-center justify-center">
+                    <FiFileText className="text-6xl text-gray-300" />
+                  </div>
                 )}
               </div>
 
-              {/* Content */}
+              {/* Body */}
               <div className="p-5">
-                <h3 className="font-semibold text-lg mb-2 line-clamp-1">
+                {/* Title */}
+                <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">
                   {ebook.title}
                 </h3>
-                
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                  {ebook.description || "No description available"}
+
+                {/* Desc */}
+                <p className="text-sm text-gray-500 mt-2 line-clamp-2 min-h-[40px]">
+                  {ebook.description || "No description available."}
                 </p>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    Purchased: {new Date(ebook.purchased_at).toLocaleDateString()}
-                  </span>
+                {/* Meta */}
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <FiCalendar />
+                    Purchased:{" "}
+                    {new Date(ebook.purchased_at).toLocaleDateString()}
+                  </div>
 
-                  <button
-                    onClick={() => handleDownload(ebook.file_url, ebook.title)}
-                    className="flex items-center gap-2 bg-[#B8964E] hover:bg-[#9E7F42] text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-                  >
-                    <FiDownload />
-                    Download PDF
-                  </button>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <FiShoppingBag />
+                    Order: {ebook.order_no}
+                  </div>
                 </div>
 
-                {/* Order number */}
-                <p className="text-xs text-gray-400 mt-3">
-                  Order: {ebook.order_no}
-                </p>
+                {/* Button */}
+                <button
+                  onClick={() => handleDownload(ebook.file_url)}
+                  className="w-full mt-5 bg-[#B8964E] hover:bg-[#9E7F42] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition"
+                >
+                  <FiDownload />
+                  Download PDF
+                </button>
               </div>
             </div>
           );

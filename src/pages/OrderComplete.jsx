@@ -43,7 +43,7 @@ const PaymentModal = ({ isOpen, status, message, orderId, onClose }) => {
                 : "bg-red-600 hover:bg-red-700"
             }`}
           >
-            {status === "success" ? "View My Orders" : "Try Again"}
+            {status === "success" ? "View Downloads" : "Try Again"}
           </button>
         </div>
       </div>
@@ -252,7 +252,7 @@ const OrderComplete = () => {
   // Handle modal close
   const handleModalClose = () => {
     setShowModal(false);
-    navigate(modalStatus === "success" ? "/my-account/orders" : "/checkout");
+    navigate(modalStatus === "success" ? "/my-account/Downloads" : "/checkout");
   };
 
   // ================ MAIN PAYMENT VERIFICATION - FIXED ================
