@@ -132,136 +132,116 @@ const Checkout = () => {
   };
 
   // 🔹 Handle order placement & QR generation
-  const handlePlaceOrder = async () => {
-    if (!validateForm()) return;
+const handlePlaceOrder = async () => {
+  if (!validateForm()) return;
 
-    // ✅ Check if we have userId from cart
-    if (!userId) {
-      console.error("User ID not found in cart data:", data);
-      alert("User information not found. Please login again.");
-      navigate("/login");
+  // ✅ Amount validation BEFORE API call
+  if (subtotal > 10000) {
+    alert("Amount exceeds more than 10000. Please order items less than 10000.");
+    return;
+  }
+
+  // ✅ Check user
+  if (!userId) {
+    alert("User information not found. Please login again.");
+    navigate("/login");
+    return;
+  }
+
+  // ✅ Check cart
+  if (!cartId && !data?.id) {
+    alert("Cart not found. Please refresh.");
+    return;
+  }
+
+  try {
+    // =========================
+    // STEP 1: PLACE ORDER
+    // =========================
+    const orderResult = await placeOrder({
+      user_id: userId,
+      cart_id: cartId || data?.id,
+      phone_number: phone,
+      address: `${address}, ${city}, ${state} - ${pincode}`,
+      pincode: pincode,
+      payment_method: "CASH",
+    });
+
+    if (!orderResult?.status) {
+      alert(orderResult?.message || "Failed to place order");
       return;
     }
 
-    console.log("Current userId from cart:", userId);
-    console.log("Current cartId:", cartId);
-    console.log("Current data:", data);
-    console.log("Current orderItems BEFORE storing:", orderItems); // DEBUG
+    const orderNo = orderResult.order.order_no;
 
-    if (!cartId) {
-      console.error("Cart ID is missing. Current cart data:", data);
+    // =========================
+    // STEP 2: GENERATE QR
+    // =========================
+    const qrResult = await generateQR({
+      orderid: orderNo,
+      amount: subtotal,
+      buyer_email: email,
+      buyer_phone: phone,
+    });
 
-      // Try to get cart ID from data one more time
-      if (data?.id) {
-        setCartId(data.id);
-        console.log("Recovered cart ID:", data.id);
-      } else {
-        alert("Cart not found. Please refresh the page or add items to cart.");
-        return;
-      }
+    console.log("QR RESULT:", qrResult);
+
+    // ✅ FIXED: Correct success condition
+    if (qrResult?.status === "success") {
+      const formattedCartItems = orderItems.map(item => ({
+        id: item.id,
+        cart_item_id: item.cart_item_id,
+        ebook_id: item.ebook_id,
+        qty: item.qty,
+        name: item.name,
+        oldPrice: item.oldPrice,
+        newPrice: item.newPrice,
+        total: item.total,
+        desc: item.desc,
+        img: item.img
+      }));
+
+      const orderData = {
+        orderId: orderNo,
+        orderDbId: orderResult.order.id,
+        qrData: qrResult.response?.data,
+        cartItems: formattedCartItems,
+        subtotal: subtotal,
+        email,
+        phone,
+        billingAddress: {
+          firstName,
+          lastName,
+          address,
+          city,
+          state,
+          pincode,
+          country,
+        },
+      };
+
+      sessionStorage.removeItem("orderData");
+      sessionStorage.setItem("orderData", JSON.stringify(orderData));
+
+      navigate("/order");
+
+    } else {
+      // ✅ FIXED: Show backend error message
+      alert(qrResult?.message || "Failed to generate QR");
     }
 
-    try {
-      console.log("Placing order with:", {
-        user_id: userId,
-        cart_id: cartId || data?.id,
-        phone_number: phone,
-        address: `${address}, ${city}, ${state} - ${pincode}`,
-        pincode: pincode,
-        payment_method: "CASH",
-      });
+  } catch (error) {
+    console.error("Order Error:", error);
 
-      // STEP 1: Place order first
-      const orderResult = await placeOrder({
-        user_id: userId,
-        cart_id: cartId || data?.id,
-        phone_number: phone,
-        address: `${address}, ${city}, ${state} - ${pincode}`,
-        pincode: pincode,
-        payment_method: "CASH",
-      });
+    // ✅ Always show backend message if available
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Something went wrong while processing your order";
 
-      console.log("Order placed:", orderResult);
-
-      if (orderResult?.status === true) {
-        // STEP 2: Generate QR with the order number from database
-        const orderNo = orderResult.order.order_no;
-
-        const qrResult = await generateQR({
-          orderid: orderNo,
-          amount: subtotal, // Keep hardcoded for testing
-          buyer_email: email,
-          buyer_phone: phone,
-        });
-
-        console.log("QR Generated:", qrResult);
-
-        if (qrResult?.response?.status === "success") {
-          // Debug: Log what Airpay returned
-          console.log("Airpay QR response data:", qrResult.response.data);
-          console.log("ap_transactionid:", qrResult.response.data.ap_transactionid);
-
-          // STEP 3: Format cart items properly for storage
-          const formattedCartItems = orderItems.map(item => ({
-            id: item.id,
-            cart_item_id: item.cart_item_id,
-            ebook_id: item.ebook_id,
-            qty: item.qty,
-            name: item.name,
-            oldPrice: item.oldPrice,
-            newPrice: item.newPrice,
-            total: item.total, // Keep as 10 for testing
-            desc: item.desc,
-            img: item.img
-          }));
-
-          // STEP 4: Store complete order data
-          const orderData = {
-            orderId: orderNo,
-            orderDbId: orderResult.order.id,
-            qrData: qrResult.response.data,
-            cartItems: formattedCartItems, // Use formatted items
-            subtotal: subtotal, // Hardcoded for testing
-            email,
-            phone,
-            billingAddress: {
-              firstName,
-              lastName,
-              address,
-              city,
-              state,
-              pincode,
-              country,
-            },
-          };
-
-          console.log("✅ Storing order data with cart items:", formattedCartItems);
-          console.log("✅ Cart items count:", formattedCartItems.length);
-
-          // Clear any existing order data first
-          sessionStorage.removeItem("orderData");
-
-          // Store new order data
-          sessionStorage.setItem("orderData", JSON.stringify(orderData));
-
-          // Verify storage
-          const stored = sessionStorage.getItem("orderData");
-          const parsed = JSON.parse(stored);
-          console.log("✅ Verified stored cart items:", parsed.cartItems);
-          console.log("✅ Verified stored cart items count:", parsed.cartItems.length);
-
-          navigate('/order');
-        } else {
-          alert("Failed to generate QR. Please try again.");
-        }
-      } else {
-        alert(orderResult?.message || "Failed to place order");
-      }
-    } catch (err) {
-      console.error("Failed to process order:", err);
-      alert("Something went wrong while processing your order");
-    }
-  };
+    alert(message);
+  }
+};
   // Combined loading state
   const isProcessing = orderLoading || qrLoading;
 return (

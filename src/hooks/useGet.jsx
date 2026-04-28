@@ -1,44 +1,59 @@
-  import { useState, useEffect, useCallback } from "react";
-  import axios from "axios";
+import { useState, useEffect, useCallback, useRef } from "react";
+import axios from "axios";
 
-  const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL;
 
-  export function useGet(endpoint) {
-    // console.log("useGet rendered with endpoint:", endpoint); // ← watch how often & if value stable
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    
+export function useGet(endpoint) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(!!endpoint);
+  const [error, setError] = useState(null);
 
-    const fetchData = useCallback(async () => {
-      setLoading(true);
-      setError(null);
+  const mountedRef = useRef(true);
+  const fetchedRef = useRef(false);
 
-      try {
-        const response = await axios.get(`${BASE_URL}${endpoint}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        //  console.log("fetch succeeded → setting data");
+  const fetchData = useCallback(async () => {
+    if (!endpoint) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.get(`${BASE_URL}${endpoint}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (mountedRef.current) {
         setData(response.data);
-      } catch (err) {
+      }
+    } catch (err) {
+      if (mountedRef.current) {
         setError(
           err?.response?.data?.message ||
           err?.message ||
           "Something went wrong"
         );
-      } finally {
+      }
+    } finally {
+      if (mountedRef.current) {
         setLoading(false);
       }
-    }, [endpoint]); // ✅ stable unless endpoint changes
+    }
+  }, [endpoint]);
 
-    useEffect(() => {
-      // console.log("useEffect triggered → calling fetchData");
-       if (!endpoint) return;  
-      fetchData();
-    }, [fetchData,endpoint]); // ✅ correct dependency
+  useEffect(() => {
+    mountedRef.current = true;
 
-    return { data, loading, error, refetch: fetchData };
-  }
+    if (!endpoint || fetchedRef.current) return;
+
+    fetchedRef.current = true;
+    fetchData();
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [fetchData, endpoint]);
+
+  return { data, loading, error, refetch: fetchData };
+}
