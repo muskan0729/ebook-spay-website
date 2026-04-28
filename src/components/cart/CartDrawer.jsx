@@ -1,140 +1,187 @@
-import { FiX } from "react-icons/fi";
+import { FiX, FiTrash2 } from "react-icons/fi";
+import { FiLock } from "react-icons/fi";
 import EmptyCart from "./EmptyCart";
 import { useGet } from "../../hooks/useGet";
+import { useDelete } from "../../hooks/useDelete";
 import { Link } from "react-router-dom";
-import { FiLock } from "react-icons/fi";
+import { useState } from "react";
 
 const CartDrawer = ({ open, onClose, openLogin }) => {
-
   const isLoggedIn = !!localStorage.getItem("token");
 
   const { data, loading, error } = useGet(
     open && isLoggedIn ? "cart" : null
   );
 
-  const cartItems = data?.items || [];
-  const subtotal = data?.subtotal || 0;
+  const { executeDelete } = useDelete("cart/item");
+
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+  const [removedIds, setRemovedIds] = useState([]);
+
+  const cartItems =
+    data?.items?.filter((item) => !removedIds.includes(item.id)) || [];
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + Number(item.price) * Number(item.quantity),
+    0
+  );
+
+  const removeItem = async (id) => {
+    try {
+      setDeleteLoadingId(id);
+
+      await executeDelete(`cart/item/${id}`);
+
+      setRemovedIds((prev) => [...prev, id]);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setDeleteLoadingId(null);
+    }
+  };
 
   if (!open) return null;
 
   return (
     <>
-      {/* OVERLAY */}
+      {/* Overlay */}
       <div
         onClick={onClose}
         className="fixed inset-0 bg-black/40 z-[998]"
       />
 
-      {/* DRAWER */}
-      <aside className="fixed top-0 right-0 h-full w-[360px] bg-white z-[999] shadow-xl animate-slideLeft flex flex-col">
+      {/* Drawer */}
+      <aside className="fixed top-0 right-0 h-full w-[390px] bg-white z-[999] shadow-2xl animate-slideLeft flex flex-col">
 
-        {/* HEADER */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h3 className="text-sm font-semibold">SHOPPING CART</h3>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b">
+          <h3 className="text-sm font-semibold tracking-wide">
+            SHOPPING CART
+          </h3>
 
           <button
             onClick={onClose}
-            className="text-sm font-medium hover:opacity-60 flex items-center gap-1"
+            className="flex items-center gap-1 text-sm hover:opacity-70"
           >
-            <FiX size={14} /> CLOSE
+            <FiX size={15} />
+            CLOSE
           </button>
         </div>
 
-        {/* CONTENT */}
+        {/* Body */}
         <div className="flex-1 overflow-y-auto">
 
-          {/* NOT LOGGED IN */}
+          {/* Login Required */}
           {!isLoggedIn && (
-            <div className="p-6 text-center space-y-4 flex flex-col items-center">
+            <div className="p-8 text-center flex flex-col items-center gap-4">
 
-              <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-100">
-                <FiLock size={28} className="text-gray-600" />
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                <FiLock size={26} />
               </div>
 
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-500">
                 Please login to view your cart
               </p>
 
               <button
                 onClick={() => {
                   onClose();
-                  setTimeout(() => {
-                    openLogin();
-                  }, 0);
+                  setTimeout(() => openLogin(), 0);
                 }}
-                className="block w-full text-center bg-black text-white py-3 rounded text-sm font-semibold hover:opacity-90"
+                className="w-full bg-black text-white py-3 rounded text-sm font-semibold"
               >
-                LOGIN TO VIEW CART
+                LOGIN
               </button>
             </div>
           )}
 
-          {/* LOADING */}
+          {/* Loading */}
           {isLoggedIn && loading && (
             <p className="p-6 text-sm text-gray-500">
               Loading cart...
             </p>
           )}
 
-          {/* ERROR */}
+          {/* Error */}
           {isLoggedIn && error && (
             <p className="p-6 text-sm text-red-500">
               Failed to load cart
             </p>
           )}
 
-          {/* EMPTY */}
+          {/* Empty */}
           {isLoggedIn && !loading && cartItems.length === 0 && (
             <EmptyCart />
           )}
 
-          {/* ITEMS */}
+          {/* Items */}
           {isLoggedIn && !loading && cartItems.length > 0 && (
-            <div className="p-6 space-y-4">
+            <div className="p-5 space-y-5">
 
               {cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex justify-between items-start border-b pb-4"
+                  className="flex gap-4 border-b pb-5"
                 >
-                  <div>
-                    <p className="text-sm font-medium">
-                      {item.ebook?.title}
-                    </p>
+                  {/* Image */}
+                  <img
+                    src={item.ebook?.image}
+                    alt={item.ebook?.title}
+                    className="w-20 h-28 object-cover rounded-lg border"
+                  />
 
-                    <p className="text-xs text-gray-500">
+                  {/* Content */}
+                  <div className="flex-1">
+
+                    <h4 className="text-sm font-semibold text-gray-800 line-clamp-2">
+                      {item.ebook?.title}
+                    </h4>
+
+                    <p className="text-xs text-gray-500 mt-1">
                       Qty: {item.quantity}
                     </p>
-                  </div>
 
-                  <p className="text-sm font-semibold">
-                    ₹{Number(item.price).toLocaleString()}
-                  </p>
+                    <p className="text-sm font-semibold mt-2">
+                      ₹{Number(item.price).toLocaleString()}
+                    </p>
+
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      disabled={deleteLoadingId === item.id}
+                      className="mt-3 text-xs text-red-500 flex items-center gap-1 hover:underline"
+                    >
+                      <FiTrash2 size={13} />
+
+                      {deleteLoadingId === item.id
+                        ? "Removing..."
+                        : "Remove"}
+                    </button>
+                  </div>
                 </div>
               ))}
 
             </div>
           )}
-
         </div>
 
-        {/* FOOTER */}
+        {/* Footer */}
         {isLoggedIn && cartItems.length > 0 && !loading && (
           <div className="border-t p-6 space-y-4">
 
-            <div className="flex justify-between font-semibold">
-              <span>SUBTOTAL:</span>
-              <span>₹{Number(subtotal).toLocaleString()}</span>
+            <div className="flex justify-between text-sm font-semibold">
+              <span>SUBTOTAL</span>
+              <span>
+                ₹{Number(subtotal).toLocaleString()}
+              </span>
             </div>
 
             <Link
               to="/view-cart"
               onClick={onClose}
-              className="block w-full text-center bg-black text-white py-3 rounded text-sm font-semibold hover:opacity-90"
+              className="block text-center bg-black text-white py-3 rounded text-sm font-semibold"
             >
               VIEW CART
             </Link>
-
           </div>
         )}
 
