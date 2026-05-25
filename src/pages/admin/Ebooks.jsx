@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { useDelete } from "../../hooks/useDelete";
 import { useGet } from "../../hooks/useGet";
 import { usePost } from "../../hooks/usePost";
-import { usePut } from "../../hooks/usePut";
+import axios from "axios";
 
 export default function Ebooks() {
   const { data: categorieData, error: categoryError } = useGet("categories");
 
   // ✅ PAGE STATE
   const [page, setPage] = useState(1);
-
+const [updating, setUpdating] = useState(false);
   // ✅ FETCH WITH PAGE
   const {
     data,
@@ -21,8 +21,7 @@ export default function Ebooks() {
     usePost("admin/ebooks");
   const { executeDelete: remove, loading: deleting, error: deleteError } =
     useDelete("admin/ebooks");
-  const { executePut: update, loading: updating, error: putError } =
-    usePut("admin/ebooks");
+
 
   const [openModal, setOpenModal] = useState(false);
   const [selectedEbook, setSelectedEbook] = useState(null);
@@ -114,36 +113,67 @@ export default function Ebooks() {
   };
 
   /* ================= UPDATE ================= */
-  const handleUpdate = async () => {
-    if (!selectedEbook) return;
+const handleUpdate = async () => {
+  if (!selectedEbook) return;
 
-    try {
-      const fd = new FormData();
-      fd.append("title", updateForm.title);
-      fd.append("description", updateForm.description);
-      fd.append("price", updateForm.price);
+  try {
+    setUpdating(true);
 
-      if (updateForm.ebook_file)
-        fd.append("ebook_file", updateForm.ebook_file);
-      updateForm.images.forEach((img) => fd.append("images[]", img));
-      updateForm.categories.forEach((id) =>
-        fd.append("categories[]", id)
-      );
+    const fd = new FormData();
 
-      await update({ id: selectedEbook.id, formData: fd });
+    fd.append("title", updateForm.title);
+    fd.append("description", updateForm.description);
+    fd.append("price", updateForm.price);
 
-      alert(`✅ Ebook "${updateForm.title}" updated successfully!`);
-      setOpenModal(false);
-      refetch();
-    } catch (err) {
-      console.error(err);
-      alert(
-        `❌ Failed to update ebook: ${
-          err.message || putError?.message || "Unknown error"
-        }`
-      );
+    // IMPORTANT FIX FOR LARAVEL
+    fd.append("_method", "PUT");
+
+    // PDF
+    if (updateForm.ebook_file) {
+      fd.append("ebook_file", updateForm.ebook_file);
     }
-  };
+
+    // Multiple Images
+    updateForm.images.forEach((img) => {
+      fd.append("images[]", img);
+    });
+
+    // Categories
+    updateForm.categories.forEach((id) => {
+      fd.append("categories[]", id);
+    });
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}admin/ebooks/${selectedEbook.id}`,
+      fd,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    console.log("Update Response:", response.data);
+
+    alert(`✅ Ebook "${updateForm.title}" updated successfully!`);
+
+    setOpenModal(false);
+
+    refetch();
+
+  } catch (err) {
+    console.error(err);
+
+    alert(
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      "Failed to update ebook"
+    );
+  } finally {
+    setUpdating(false);
+  }
+};
 
   /* ================= DELETE ================= */
 const handleDelete = async (ebook) => {
@@ -451,3 +481,5 @@ const handleDelete = async (ebook) => {
     </div>
   );
 }
+
+

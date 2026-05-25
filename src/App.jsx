@@ -1,5 +1,12 @@
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+
+import { useState, useEffect } from "react";
 
 /* COMMON */
 import Header from "./components/common/Header";
@@ -48,32 +55,62 @@ import Transactions from "./pages/admin/Transactions";
 import { Toaster } from "sonner";
 import ScrollTop from "./components/ScrollTop";
 
-
 /* ================= INNER APP ================= */
 
 function AppContent() {
-
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 👇 detect admin route
+  // Detect admin route
   const isAdmin = location.pathname.startsWith("/admin");
 
-  /* AUTH SIDEBAR STATE */
+  /* AUTH SIDEBAR */
   const [authOpen, setAuthOpen] = useState(false);
   const [authView, setAuthView] = useState("login");
 
+  /* CART POPUP */
+  const [cartOpen, setCartOpen] = useState(false);
+
+  // OPEN LOGIN SIDEBAR
   const openLogin = () => {
     setAuthView("login");
     setAuthOpen(true);
   };
 
+  // GLOBAL CART POPUP EVENT
+  useEffect(() => {
+    const handler = () => {
+      setCartOpen(true);
+    };
+
+    window.addEventListener(
+      "open-cart-popup",
+      handler
+    );
+
+    return () => {
+      window.removeEventListener(
+        "open-cart-popup",
+        handler
+      );
+    };
+  }, []);
+
   return (
     <>
-      <Toaster position="bottom-left" richColors closeButton />
+      <Toaster
+        position="bottom-left"
+        richColors
+        closeButton
+      />
 
-      {/* HEADER (HIDDEN IN ADMIN) */}
-      {!isAdmin && <Header openLogin={openLogin} />}
+      {/* HEADER */}
+      {!isAdmin && (
+        <Header
+          openLogin={openLogin}
+          setCartOpen={setCartOpen}
+        />
+      )}
 
       {/* AUTH SIDEBAR */}
       {!isAdmin && (
@@ -85,103 +122,157 @@ function AppContent() {
         />
       )}
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <main className="min-h-screen bg-[#FEFCF9]">
         <Routes>
 
-          {/* ================= PUBLIC ROUTES ================= */}
+          {/* PUBLIC */}
 
           <Route path="/" element={<Home />} />
 
           <Route path="/shop" element={<ShopPage />} />
 
-          <Route path="/books/:id" element={<ProductDetails />} />
+          <Route
+            path="/books/:id"
+            element={<ProductDetails />}
+          />
 
-          <Route path="/checkout" element={<Checkout />} />
+          <Route
+            path="/checkout"
+            element={<Checkout />}
+          />
 
           <Route path="/about" element={<AboutUs />} />
 
-          <Route path="/contact" element={<ContactUs />} />
+          <Route
+            path="/contact"
+            element={<ContactUs />}
+          />
 
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route
+            path="/privacy-policy"
+            element={<PrivacyPolicy />}
+          />
 
-          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route
+            path="/refund-policy"
+            element={<RefundPolicy />}
+          />
 
-          <Route path="/refund-cancellation" element={<RefundCancellation />} />
+          <Route
+            path="/refund-cancellation"
+            element={<RefundCancellation />}
+          />
 
-          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route
+            path="/shipping-policy"
+            element={<ShippingPolicy />}
+          />
 
           <Route path="/terms" element={<Terms />} />
 
-          <Route path="/view-cart" element={<ViewCart />} />
+          <Route
+            path="/view-cart"
+            element={<ViewCart />}
+          />
 
-          <Route path="/order" element={<OrderComplete />} />
+          <Route
+            path="/order"
+            element={<OrderComplete />}
+          />
 
+          {/* MY ACCOUNT */}
 
-          {/* ================= MY ACCOUNT ================= */}
-
-          <Route path="/my-account" element={<MyAccountLayout />}>
-
+          <Route
+            path="/my-account"
+            element={<MyAccountLayout />}
+          >
             <Route index element={<Dashboard />} />
 
-            <Route path="orders" element={<Orders />} />
+            <Route
+              path="orders"
+              element={<Orders />}
+            />
 
-            <Route path="downloads" element={<Downloads />} />
+            <Route
+              path="downloads"
+              element={<Downloads />}
+            />
 
-            <Route path="account-details" element={<AccountDetails />} />
-
+            <Route
+              path="account-details"
+              element={<AccountDetails />}
+            />
           </Route>
 
-
-          {/* ================= ADMIN PANEL ================= */}
+          {/* ADMIN */}
 
           <Route element={<AdminRoute />}>
+            <Route
+              path="/admin/*"
+              element={<AdminLayout />}
+            >
+              <Route
+                index
+                element={<DashboardAdmin />}
+              />
 
-            <Route path="/admin/*" element={<AdminLayout />}>
+              <Route
+                path="categories"
+                element={<Categories />}
+              />
 
-              <Route index element={<DashboardAdmin />} />
+              <Route
+                path="ebooks"
+                element={<Ebooks />}
+              />
 
-              <Route path="categories" element={<Categories />} />
+              <Route
+                path="orders"
+                element={<Allorders />}
+              />
 
-              <Route path="ebooks" element={<Ebooks />} />
+              <Route
+                path="users"
+                element={<Users />}
+              />
 
-              <Route path="orders" element={<Allorders />} />
-
-              <Route path="users" element={<Users />} />
-
-              <Route path="transactions" element={<Transactions />} />
-
+              <Route
+                path="transactions"
+                element={<Transactions />}
+              />
             </Route>
-
           </Route>
 
         </Routes>
       </main>
 
-      {/* CART POPUP (HIDDEN IN ADMIN) */}
-      {!isAdmin && <CartPopup />}
+      {/* GLOBAL CART POPUP */}
+      {!isAdmin && (
+        <CartPopup
+          open={cartOpen}
+          setOpen={setCartOpen}
+          setAuthOpen={setAuthOpen}
+          setAuthView={setAuthView}
+        />
+      )}
 
-      {/* FOOTER (HIDDEN IN ADMIN) */}
+      {/* FOOTER */}
       {!isAdmin && <Footer />}
     </>
   );
 }
 
-
-/* ================= MAIN WRAPPER ================= */
+/* ================= MAIN APP ================= */
 
 function App() {
   return (
     <BrowserRouter>
-
       <ScrollTop />
 
       <CartProvider>
-
         <AppContent />
-
       </CartProvider>
-
     </BrowserRouter>
   );
 }

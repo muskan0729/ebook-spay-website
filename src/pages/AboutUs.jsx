@@ -25,6 +25,11 @@ export default function AboutUs() {
           <p className="mt-4 max-w-2xl mx-auto text-gray-200 text-lg">
             Where stories inspire minds and books build communities.
           </p>
+<br>
+</br>
+          <h4 className="text-6xl md:text-3xl font-semibold tracking-wide">
+            Spay Fintech Private Limited.
+          </h4>
         </motion.div>
       </section>
 
@@ -46,7 +51,7 @@ export default function AboutUs() {
             OUR STORY
           </h6>
           <p className="text-gray-600 mb-4">
-            EbookSpay was created to be more than just a bookstore. It’s a
+            EbookSpay ( Powered by Spay Fintech Private Limited ) was created to be more than just a bookstore. It’s a
             destination where stories live, inspire, and connect readers
             everywhere.
           </p>
@@ -125,7 +130,7 @@ export default function AboutUs() {
           Conscious Choices For A Better Tomorrow
         </h2>
         <p className="max-w-3xl mx-auto text-gray-600 text-lg leading-relaxed">
-          EbookSpay supports eco-friendly publishing, recyclable packaging,
+          EbookSpay ( Powered by Spay Fintech Private Limited )supports eco-friendly publishing, recyclable packaging,
           and literacy initiatives that help build a greener future.
         </p>
       </section>
