@@ -30,7 +30,7 @@ export default function Footer() {
               <ul className="space-y-3">
                 <li><Link to="/privacy-policy" className="hover:text-[#0C6E63] transition">Privacy Policy</Link></li>
                 <li><Link to="/refund-cancellation" className="hover:text-[#0C6E63] transition">Refund & Cancellation</Link></li>
-                <li><Link to="/refund-policy" className="hover:text-[#0C6E63] transition">Refund Policy</Link></li>
+                {/* <li><Link to="/refund-policy" className="hover:text-[#0C6E63] transition">Refund Policy</Link></li> */}
                 <li><Link to="/shipping-policy" className="hover:text-[#0C6E63] transition">Shipping Policy</Link></li>
                 <li><Link to="/terms" className="hover:text-[#0C6E63] transition">Terms & Conditions</Link></li>
               </ul>
@@ -71,7 +71,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between text-sm font-medium text-gray-800">
           
           <p className="text-center sm:text-left">
-            © 2026 Ebookspay. All Rights Reserved | Powered by Spay Fintech Pvt Ltd
+            © 2026 Ebookspay. All Rights Reserved | Powered by Spay Fintech Private Limited
           </p>
 
           <img

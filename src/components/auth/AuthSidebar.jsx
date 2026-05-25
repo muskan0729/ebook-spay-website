@@ -1,8 +1,13 @@
+import { useEffect } from "react";
 import Login from "./Login";
 import Register from "./Register";
 
-
 const AuthSidebar = ({ open, setOpen, view, setView }) => {
+
+
+
+  // ✅ Listen for global login open event
+
   return (
     <>
       {/* Overlay */}
@@ -23,15 +28,18 @@ const AuthSidebar = ({ open, setOpen, view, setView }) => {
           <h3 className="text-lg font-semibold">
             {view === "login" ? "Sign in" : "Create Account"}
           </h3>
-          <button onClick={() => setOpen(false)}>✕</button>
+
+          <button onClick={() => setOpen(false)}>
+            ✕
+          </button>
         </div>
 
         <div className="p-5">
           {view === "login" ? (
             <Login switchToRegister={() => setView("register")} />
-            ) : (
+          ) : (
             <Register switchToLogin={() => setView("login")} />
-            )}
+          )}
         </div>
       </div>
     </>

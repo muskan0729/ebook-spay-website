@@ -88,7 +88,7 @@ export default function ProductDetails() {
       }
     } catch (err) {
       console.error("Add to cart error:", err);
-      alert("Something went wrong while adding to cart.");
+      alert("Please login first to add products to cart.");
     }
   };
 

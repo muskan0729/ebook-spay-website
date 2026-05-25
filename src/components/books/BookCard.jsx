@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import {usePost} from "../../hooks/usePost";
 import { addToCartManager } from "../../utils/cartManager";
 import { toast } from "sonner";
-import CartPopup from "../cart/CartPopup";
 import { useState } from "react";
 
 
@@ -11,8 +10,7 @@ const BookCard = ({ book }) => {
   const IMG_URL = import.meta.env.VITE_IMG_URL;
 
   // const [showpop,setshowpop] = useState(false);
-    const [open, setOpen] = useState(false); 
-
+const [open, setOpen] = useState(false);
 
   const handleAddToCart = async (book, qty = 1) => {
     const cartItem = {
@@ -28,7 +26,9 @@ const BookCard = ({ book }) => {
       // Assuming addToCartManager returns a Promise
       await addToCartManager(cartItem, cartExecute);
       // toast.success("Added to cart");
-      setOpen(true);
+      window.dispatchEvent(
+  new CustomEvent("open-cart-popup")
+);
     } catch (err) {
       toast.error("Failed to add to cart");
     } 
@@ -48,7 +48,6 @@ const BookCard = ({ book }) => {
 
   return (
     <> 
-      {open && <CartPopup open={open} setOpen={setOpen} />}
     <div
       className="
         group
