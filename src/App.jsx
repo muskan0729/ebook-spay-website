@@ -32,7 +32,7 @@ import RefundCancellation from "./pages/RefundCancellation";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import Terms from "./pages/Terms";
 import ViewCart from "./pages/ViewCart";
-import OrderComplete from "./pages/OrderComplete";
+//import OrderComplete from "./pages/OrderComplete";
 
 /* MY ACCOUNT */
 import MyAccountLayout from "./pages/my-account/MyAccountLayout";
@@ -54,6 +54,8 @@ import Transactions from "./pages/admin/Transactions";
 /* UTIL */
 import { Toaster } from "sonner";
 import ScrollTop from "./components/ScrollTop";
+import PaymentPage from "./pages/PaymentPage";
+import PaymentResult from "./pages/PaymentResult";
 
 /* ================= INNER APP ================= */
 
@@ -176,9 +178,18 @@ function AppContent() {
             element={<ViewCart />}
           />
 
-          <Route
+          {/* <Route
             path="/order"
             element={<OrderComplete />}
+          /> */}
+          <Route
+            path="/payment"
+            element={<PaymentPage />}
+          />
+
+          <Route
+            path="/payment-result"
+            element={<PaymentResult />}
           />
 
           {/* MY ACCOUNT */}

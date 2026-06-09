@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Cartprocess from "../components/Cartprocess";
 import { useGet } from "../hooks/useGet";
 import { usePost } from "../hooks/usePost";
 import Loader from "../components/Loader";
@@ -9,25 +8,17 @@ const Checkout = () => {
   const navigate = useNavigate();
   const IMG_URL = import.meta.env.VITE_IMG_URL;
 
-  // 🔹 Hooks at the top level
   const { data, loading, error } = useGet("cart");
 
-  // ✅ Add placeOrder hook
-  const {
-    data: orderResponse,
-    loading: orderLoading,
-    error: orderError,
-    execute: placeOrder,
-  } = usePost("checkout/place-order");
+  const { execute: initiatePaytm, loading: paytmLoading } =
+    usePost("paytm/initiate");
 
-  const {
-    data: qrData,
-    loading: qrLoading,
-    error: qrError,
-    execute: generateQR,
-  } = usePost("generate-qr");
+  const [orderItems, setOrderItems] = useState([]);
+  const [subtotal, setSubtotal] = useState(0);
 
-  // 🔹 Form state
+  const [userId, setUserId] = useState(null);
+  const [cartId, setCartId] = useState(null);
+
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -38,453 +29,207 @@ const Checkout = () => {
   const [pincode, setPincode] = useState("");
   const [country, setCountry] = useState("India");
 
-  // 🔹 Cart & totals state
-  const [orderItems, setOrderItems] = useState([]);
-  const [subtotal, setSubtotal] = useState(0);
-  const [cartId, setCartId] = useState(null);
-  const [userId, setUserId] = useState(null); // Get this from cart data
-
-  // 🔹 Map cart API → checkout UI - Get userId from cart data
+  // CART MAP
   useEffect(() => {
-    console.log("Raw cart data:", data);
+    if (!data?.items) return;
 
-    if (data) {
-      // Check if data has items
-      if (data.items && data.items.length > 0) {
-        // Log the entire data object to see all fields
-        console.log("Cart data full object:", JSON.stringify(data, null, 2));
+    setCartId(data.id || null);
+    setUserId(data.user_id || null);
 
-        // Set cart ID
-        if (data.id) {
-          console.log("Cart ID found:", data.id);
-          setCartId(data.id);
-        }
+    const items = data.items.map((item) => ({
+      id: item.id,
+      qty: item.quantity,
+      name: item.ebook?.title || "Product",
+      newPrice: Number(item.price || 0),
+      oldPrice: Number(item.ebook?.price || 0),
+      total: Number(item.price || 0) * Number(item.quantity || 1),
+      desc: item.ebook?.description || "",
+      img: item.ebook?.image?.split("/").pop() || "",
+    }));
 
-        // ✅ Set userId from cart data
-        if (data.user_id) {
-          console.log("User ID found in cart:", data.user_id);
-          setUserId(data.user_id);
-        }
+    setOrderItems(items);
 
-        const formattedItems = data.items.map((item) => {
-          // Calculate total properly since API returns "0.00"
-          const price = Number(item.price || 0);
-          const quantity = Number(item.quantity || 1);
-          const itemTotal = price * quantity;
-
-          return {
-            id: item.id,
-            cart_item_id: item.id,
-            ebook_id: item.ebook?.id,
-            qty: quantity,
-            name: item.ebook?.title || "Product",
-            oldPrice: Number(item.ebook?.price || 0),
-            newPrice: price,
-            total: itemTotal, // Use calculated total
-            desc: item.ebook?.description || "",
-            img: item.ebook?.image?.split("/").pop() || "",
-          };
-        });
-
-        setOrderItems(formattedItems);
-        setSubtotal(
-  formattedItems.reduce((sum, item) => sum + item.newPrice * item.qty, 0)
-);
-      } else {
-        console.log("No items in cart or unexpected structure:", data);
-        setOrderItems([]);
-        setSubtotal(0);
-        setCartId(null);
-        setUserId(null);
-      }
-    }
+    setSubtotal(
+      items.reduce((sum, i) => sum + i.newPrice * i.qty, 0)
+    );
   }, [data]);
 
-  // 🔹 Loading & error state for cart
   if (loading) return <Loader />;
   if (error)
     return (
       <div className="text-center py-20 text-red-500">
-        Failed to load checkout: {error}
+        Failed to load checkout
       </div>
     );
 
-  // 🔹 Validate form
-  const validateForm = () => {
-    if (!email || !phone || !firstName || !lastName || !address || !city || !state || !pincode) {
-      alert("Please fill in all required fields");
+  const validate = () => {
+    if (!email || !phone || !address) {
+      alert("Please fill required fields");
       return false;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert("Please enter a valid email address");
-      return false;
-    }
-
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(phone)) {
-      alert("Please enter a valid 10-digit phone number");
-      return false;
-    }
-
     return true;
   };
 
-  // 🔹 Handle order placement & QR generation
-const handlePlaceOrder = async () => {
-  if (!validateForm()) return;
+  const handlePlaceOrder = async () => {
+    if (!validate()) return;
 
-  // ✅ Amount validation BEFORE API call
-  if (subtotal > 10000) {
-    alert("Amount exceeds more than 10000. Please order items less than 10000.");
-    return;
-  }
+    try {
+      const res = await initiatePaytm({
+        user_id: userId,
+        cart_id: cartId,
+        amount: subtotal,
+        phone_number: phone,
+        address: `${address}, ${city}, ${state}`,
+        pincode: pincode,
+      });
 
-  // ✅ Check user
-  if (!userId) {
-    alert("User information not found. Please login again.");
-    navigate("/login");
-    return;
-  }
+      if (!res?.status) {
+        alert(res?.message || "Payment failed");
+        return;
+      }
 
-  // ✅ Check cart
-  if (!cartId && !data?.id) {
-    alert("Cart not found. Please refresh.");
-    return;
-  }
-
-  try {
-    // =========================
-    // STEP 1: PLACE ORDER
-    // =========================
-    const orderResult = await placeOrder({
-      user_id: userId,
-      cart_id: cartId || data?.id,
-      phone_number: phone,
-      address: `${address}, ${city}, ${state} - ${pincode}`,
-      pincode: pincode,
-      payment_method: "CASH",
-    });
-
-    if (!orderResult?.status) {
-      alert(orderResult?.message || "Failed to place order");
-      return;
-    }
-
-    const orderNo = orderResult.order.order_no;
-
-    // =========================
-    // STEP 2: GENERATE QR
-    // =========================
-    const qrResult = await generateQR({
-      orderid: orderNo,
-      amount: subtotal,
-      buyer_email: email,
-      buyer_phone: phone,
-    });
-
-    console.log("QR RESULT:", qrResult);
-
-    // ✅ FIXED: Correct success condition
-    if (qrResult?.status === "success") {
-      const formattedCartItems = orderItems.map(item => ({
-        id: item.id,
-        cart_item_id: item.cart_item_id,
-        ebook_id: item.ebook_id,
-        qty: item.qty,
-        name: item.name,
-        oldPrice: item.oldPrice,
-        newPrice: item.newPrice,
-        total: item.total,
-        desc: item.desc,
-        img: item.img
-      }));
-
-      const orderData = {
-        orderId: orderNo,
-        orderDbId: orderResult.order.id,
-        qrData: qrResult.response?.data,
-        cartItems: formattedCartItems,
-        subtotal: subtotal,
-        email,
-        phone,
-        billingAddress: {
-          firstName,
-          lastName,
-          address,
-          city,
-          state,
-          pincode,
-          country,
+      // ✅ CLEAN STORE ONLY REQUIRED DATA
+      sessionStorage.setItem(
+        "orderData",
+        JSON.stringify({
+          orderId: res.orderId,
+          txnToken: res.txnToken,
+          mid: res.mid,
+          amount: res.amount,
+        })
+      );
+      navigate("/payment", {
+        state: {
+          orderId: res.orderId,
+          txnToken: res.txnToken,
+          mid: res.mid,
+          amount: res.amount,
         },
-      };
+      });
+      //navigate("/payment");
+      //navigate(`/payment-result?orderId=${res.orderId}`)
+      //window.location.href = res.redirectUrl;
+    } catch (err) {
+      console.error("PAYTM ERROR:", err);
 
-      sessionStorage.removeItem("orderData");
-      sessionStorage.setItem("orderData", JSON.stringify(orderData));
-
-      navigate("/order");
-
-    } else {
-      // ✅ FIXED: Show backend error message
-      alert(qrResult?.message || "Failed to generate QR");
+      alert(
+        err?.response?.data?.message ||
+        err?.message ||
+        "Something went wrong"
+      );
     }
+  };
 
-  } catch (error) {
-    console.error("Order Error:", error);
-
-    // ✅ Always show backend message if available
-    const message =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Something went wrong while processing your order";
-
-    alert(message);
-  }
-};
-  // Combined loading state
-  const isProcessing = orderLoading || qrLoading;
-return (
-  <>
+  return (
     <div className="w-full bg-white py-12">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
-          {/* LEFT SIDE FORM */}
+          {/* LEFT FORM */}
           <div className="lg:col-span-2">
 
-            {/* Contact Info */}
             <h2 className="text-2xl font-semibold mb-2">
               Contact information
             </h2>
 
-            <p className="text-sm text-gray-600 mb-5">
-              We'll use this email to send order updates.
-            </p>
-
             <input
-              type="email"
+              className="w-full border px-4 py-3 rounded mt-2"
               placeholder="Email address"
-              className="w-full border px-4 py-3 rounded outline-none focus:border-black"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
 
-            <p className="text-xs text-gray-600 mt-2">
-              You are currently checking out as a guest.
-            </p>
-
-
-            {/* Billing Address */}
-            <h2 className="text-2xl font-semibold mt-12 mb-2">
+            <h2 className="text-2xl font-semibold mt-10 mb-2">
               Billing address
             </h2>
 
             <input
-              type="text"
+              className="w-full border px-4 py-3 rounded mt-2"
               placeholder="Country"
-              className="w-full border px-4 py-3 rounded outline-none focus:border-black mt-4"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-
-              <input
-                type="text"
-                placeholder="First name"
-                className="w-full border px-4 py-3 rounded outline-none focus:border-black"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-              />
-
-              <input
-                type="text"
-                placeholder="Last name"
-                className="w-full border px-4 py-3 rounded outline-none focus:border-black"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-              />
-
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <input className="border px-4 py-3 rounded" placeholder="First name" onChange={(e) => setFirstName(e.target.value)} />
+              <input className="border px-4 py-3 rounded" placeholder="Last name" onChange={(e) => setLastName(e.target.value)} />
             </div>
 
+            <input className="w-full border px-4 py-3 rounded mt-4" placeholder="Address" onChange={(e) => setAddress(e.target.value)} />
 
-            <input
-              type="text"
-              placeholder="Address"
-              className="w-full border px-4 py-3 rounded outline-none focus:border-black mt-4"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-
-              <input
-                type="text"
-                placeholder="City"
-                className="w-full border px-4 py-3 rounded outline-none focus:border-black"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
-
-              <input
-                type="text"
-                placeholder="State"
-                className="w-full border px-4 py-3 rounded outline-none focus:border-black"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-              />
-
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <input className="border px-4 py-3 rounded" placeholder="City" onChange={(e) => setCity(e.target.value)} />
+              <input className="border px-4 py-3 rounded" placeholder="State" onChange={(e) => setState(e.target.value)} />
             </div>
 
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-
-              <input
-                type="text"
-                placeholder="PIN Code"
-                className="w-full border px-4 py-3 rounded outline-none focus:border-black"
-                value={pincode}
-                onChange={(e) => setPincode(e.target.value)}
-              />
-
-              <input
-                type="text"
-                placeholder="Phone"
-                className="w-full border px-4 py-3 rounded outline-none focus:border-black"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <input className="border px-4 py-3 rounded" placeholder="Pincode" onChange={(e) => setPincode(e.target.value)} />
+              <input className="border px-4 py-3 rounded" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
-
-
-            {/* Payment */}
-            <h2 className="text-2xl font-semibold mt-12 mb-4">
-              Payment options
-            </h2>
-
-            <div className="border rounded p-4">
-              <h3 className="font-semibold">UPI</h3>
-              <p className="text-sm text-gray-600 mt-2">
-                Pay securely via UPI .
-              </p>
-            </div>
-
-
-            <div className="flex items-center gap-3 mt-8">
-              <input type="checkbox" className="w-4 h-4" />
-              <p className="text-sm text-gray-700">
-                Add a note to your order
-              </p>
-            </div>
-
 
             {/* BUTTONS */}
-            <div className="flex flex-col md:flex-row justify-between items-center mt-10 gap-5">
+            <div className="flex justify-between items-center mt-10">
 
-              <Link
-                to="/view-cart"
-                className="text-sm font-medium text-gray-800 hover:underline"
-              >
+              <Link to="/view-cart" className="text-sm underline">
                 ← Return to Cart
               </Link>
 
               <button
                 onClick={handlePlaceOrder}
-                disabled={isProcessing}
-                className="bg-[#ed2c64] hover:bg-[#d42359] text-white font-semibold px-10 py-3 rounded w-full md:w-auto"
+                disabled={paytmLoading}
+                className="bg-[#ed2c64] text-white px-8 py-3 rounded"
               >
-                {isProcessing ? "Processing..." : "PLACE ORDER"}
+                {paytmLoading ? "Processing..." : "PLACE ORDER"}
               </button>
 
             </div>
 
           </div>
 
+          {/* RIGHT SUMMARY */}
+          <div className="border rounded-lg p-6">
 
-          {/* RIGHT SIDE SUMMARY */}
-          <div className="border rounded-lg p-6 h-fit">
-
-            <h2 className="text-lg font-semibold mb-6">
+            <h2 className="text-lg font-semibold mb-4">
               Order summary
             </h2>
 
-            {orderItems.length === 0 ? (
-              <p className="text-gray-500 text-sm">
-                Your cart is empty
-              </p>
-            ) : (
-              <div className="space-y-8">
+            {orderItems.map((item) => (
+              <div key={item.id} className="flex gap-3 mb-5">
 
-                {orderItems.map((item) => (
-                  <div key={item.id} className="flex gap-4">
+                <img
+                  src={`${IMG_URL}/${item.img}`}
+                  className="w-14 h-14 rounded border"
+                />
 
-                    <div className="relative">
-                      <img
-                        src={`${IMG_URL}/${item.img}`}
-                        alt="product"
-                        className="w-14 h-14 rounded border"
-                      />
+                <div className="flex-1">
 
-                      <span className="absolute -top-2 -right-2 bg-gray-200 text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full">
-                        {item.qty}
-                      </span>
-                    </div>
-
-
-                    <div className="flex-1">
-
-                      <div className="flex justify-between gap-4">
-                        <h3 className="text-sm font-semibold">
-                          {item.name}
-                        </h3>
-
-                        <p className="text-sm font-semibold text-orange-600">
-                          ₹{(item.newPrice * item.qty).toLocaleString()}
-                        </p>
-                      </div>
-
-
-                      <div className="flex gap-3 mt-2">
-
-                        <p className="text-xs line-through text-gray-400">
-                          ₹{item.oldPrice.toLocaleString()}
-                        </p>
-
-                        <p className="text-xs font-semibold text-orange-600">
-                          ₹{item.newPrice.toLocaleString()}
-                        </p>
-
-                      </div>
-
-
-                      <p className="text-xs text-gray-600 mt-3 line-clamp-2">
-                        {item.desc}
-                      </p>
-
-                    </div>
-
+                  <div className="flex justify-between">
+                    <p className="text-sm font-semibold">{item.name}</p>
+                    <p className="text-sm text-orange-600">
+                      ₹{item.newPrice * item.qty}
+                    </p>
                   </div>
-                ))}
+
+                  <p className="text-xs text-gray-500">
+                    Qty: {item.qty}
+                  </p>
+
+                </div>
 
               </div>
-            )}
+            ))}
 
+            <hr />
 
-            {/* Totals */}
-            <div className="border-t mt-6 pt-5 flex justify-between text-sm">
-              <p>Subtotal</p>
-              <p className="font-semibold">
-                ₹{subtotal.toLocaleString()}
-              </p>
+            <div className="flex justify-between mt-4">
+              <span>Subtotal</span>
+              <span>₹{subtotal}</span>
             </div>
 
-
-            <div className="border-t mt-5 pt-5 flex justify-between text-lg font-semibold">
-              <p>Total</p>
-              <p>₹{subtotal.toLocaleString()}</p>
+            <div className="flex justify-between font-bold mt-2">
+              <span>Total</span>
+              <span>₹{subtotal}</span>
             </div>
 
           </div>
@@ -492,8 +237,7 @@ return (
         </div>
       </div>
     </div>
-  </>
-);
-
+  );
 };
+
 export default Checkout;

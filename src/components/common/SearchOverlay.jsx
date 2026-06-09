@@ -20,7 +20,7 @@ export default function SearchOverlay({ open, onClose }) {
 
   useEffect(() => {
     if (data) {
-      console.log("products response:", data);
+      //console.log("products response:", data);
     }
   }, [data]);
 
